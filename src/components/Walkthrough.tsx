@@ -1,0 +1,89 @@
+import React, { useState } from "react";
+import Image from "next/image";
+
+interface WalkthroughProps {
+    onFinish: () => void;
+}
+
+const steps = [
+    {
+        title: "Cari Buku di Sekitarmu",
+        description: "Temukan buku dari pengguna terdekat. Izinkan lokasi agar kamu bisa melihat koleksi yang mudah dijangkau.",
+        image: "/assets/walkthrough/wl-1.svg",
+    },
+    {
+        title: "Negosiasi Sepuasnya",
+        description: "Hubungi pemilik buku dan tentukan sendiri harganya. Kamu bisa menawar, barter, atau mengambilnya secara gratis sesuai kesepakatan.",
+        image: "/assets/walkthrough/wl-2.svg",
+    },
+    {
+        title: "Kirim Sesuka Kamu",
+        description: "Atur cara serah-terima yang paling nyaman. Kamu bisa COD, menggunakan kurir, atau mengambil langsung dari pemilik buku.",
+        image: "/assets/walkthrough/wl-3.svg",
+    },
+];
+
+export default function Walkthrough({ onFinish }: WalkthroughProps) {
+    const [currentStep, setCurrentStep] = useState(0);
+
+    const handleNext = () => {
+        if (currentStep < steps.length - 1) {
+            setCurrentStep(currentStep + 1);
+        } else {
+            onFinish();
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-between min-h-screen bg-brand-white relative overflow-hidden">
+            {/* Background Decoration */}
+            <div className="absolute top-0 right-0 w-64 h-64 pointer-events-none">
+                <Image src="/assets/walkthrough/sprinkle.svg" alt="decoration" fill className="object-contain opacity-50" />
+            </div>
+
+            <div className="flex-1 flex flex-col items-center justify-center w-full px-8 pt-20">
+                {/* Image Carousel */}
+                <div className="relative w-full h-60 mb-8">
+                    <Image
+                        src={steps[currentStep].image}
+                        alt={steps[currentStep].title}
+                        fill
+                        className="object-contain transition-all duration-500"
+                        priority
+                    />
+                </div>
+
+                {/* Indicators */}
+                <div className="flex gap-2 my-8">
+                    {steps.map((_, index) => (
+                        <div
+                            key={index}
+                            className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentStep ? "w-8 bg-brand-red" : "bg-gray-300"
+                                }`}
+                        />
+                    ))}
+                </div>
+
+                {/* Text Content */}
+                <div className="text-center space-y-4 max-w-xs animate-fade-in-up">
+                    <h2 className="text-2xl font-medium text-brand-black font-sans">{steps[currentStep].title}</h2>
+                    <p className="text-brand-gray text-base leading-relaxed">{steps[currentStep].description}</p>
+                </div>
+            </div>
+
+            {/* Navigation & Controls */}
+            <div className="w-full px-8 pb-12 flex flex-col gap-6 items-center">
+                {/* Buttons */}
+                <div className="w-full space-y-3">
+                    <button
+                        onClick={handleNext}
+                        className="w-full py-4 text-base bg-brand-red text-white font-semibold rounded-xl active:scale-95 transition-transform"
+                    >
+                        {currentStep === steps.length - 1 ? "Masuk Sekarang" : "Lanjut"}
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    );
+}

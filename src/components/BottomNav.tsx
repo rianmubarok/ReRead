@@ -1,7 +1,14 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
+import { useNav } from "@/context/NavContext";
 
 export default function BottomNav() {
+    const { isVisible } = useNav();
+
+    if (!isVisible) return null;
+
     return (
         <div className="fixed bottom-0 w-full max-w-md bg-white border-t border-gray-200 h-16 flex items-center justify-around z-50">
             <Link href="/" className="flex flex-col items-center justify-center w-full h-full text-gray-500 hover:text-blue-600 transition-colors">

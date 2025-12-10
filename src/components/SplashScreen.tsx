@@ -31,7 +31,7 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
 
     return (
         <div
-            className={`fixed inset-0 z-[100] flex flex-col items-center justify-center bg-brand-red transition-opacity duration-500 ${fading ? "opacity-0" : "opacity-100"
+            className={`fixed inset-0 z-[200] flex flex-col items-center justify-center bg-brand-red transition-opacity duration-500 ${fading ? "opacity-0" : "opacity-100"
                 }`}
         >
             <div

@@ -3,6 +3,7 @@ import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import MobileContainer from "@/components/MobileContainer";
 import BottomNav from "@/components/BottomNav";
+import { NavProvider } from "@/context/NavContext";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -33,12 +34,14 @@ export default function RootLayout({
       <body
         className={`${dmSans.variable} antialiased`}
       >
-        <MobileContainer>
-          <main className="flex-1 overflow-y-auto pb-16">
-            {children}
-          </main>
-          <BottomNav />
-        </MobileContainer>
+        <NavProvider>
+          <MobileContainer>
+            <main className="flex-1 overflow-y-auto pb-16">
+              {children}
+            </main>
+            <BottomNav />
+          </MobileContainer>
+        </NavProvider>
       </body>
     </html>
   );
