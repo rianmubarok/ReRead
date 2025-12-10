@@ -10,16 +10,19 @@ const steps = [
         title: "Cari Buku di Sekitarmu",
         description: "Temukan buku dari pengguna terdekat. Izinkan lokasi agar kamu bisa melihat koleksi yang mudah dijangkau.",
         image: "/assets/walkthrough/wl-1.svg",
+        sprinkleCount: 6,
     },
     {
         title: "Negosiasi Sepuasnya",
         description: "Hubungi pemilik buku dan tentukan sendiri harganya. Kamu bisa menawar, barter, atau mengambilnya secara gratis sesuai kesepakatan.",
         image: "/assets/walkthrough/wl-2.svg",
+        sprinkleCount: 4,
     },
     {
         title: "Kirim Sesuka Kamu",
         description: "Atur cara serah-terima yang paling nyaman. Kamu bisa COD, menggunakan kurir, atau mengambil langsung dari pemilik buku.",
         image: "/assets/walkthrough/wl-3.svg",
+        sprinkleCount: 6,
     },
 ];
 
@@ -35,11 +38,21 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex flex-col items-center justify-between min-h-screen bg-brand-white relative overflow-hidden">
-            {/* Background Decoration */}
-            <div className="absolute top-0 right-0 w-64 h-64 pointer-events-none">
-                <Image src="/assets/walkthrough/sprinkle.svg" alt="decoration" fill className="object-contain opacity-50" />
-            </div>
+        <div className="absolute inset-0 z-[100] flex flex-col items-center justify-between min-h-screen bg-brand-white relative overflow-hidden">
+            {/* Dynamic Sprinkles */}
+            {Array.from({ length: steps[currentStep].sprinkleCount }).map((_, index) => (
+                <div
+                    key={index}
+                    className={`sprinkle sprinkle-${currentStep}-${index}`}
+                >
+                    <Image
+                        src="/assets/walkthrough/sprinkle.svg"
+                        alt="decoration"
+                        fill
+                        className="object-contain"
+                    />
+                </div>
+            ))}
 
             <div className="flex-1 flex flex-col items-center justify-center w-full px-8 pt-20">
                 {/* Image Carousel */}

@@ -33,3 +33,153 @@ body {
 button {
   cursor: pointer;
 }
+
+/* Walkthrough Sprinkles */
+@keyframes scale-pulse {
+
+  0%,
+  100% {
+    transform: scale(0);
+  }
+
+  50% {
+    transform: scale(1.2);
+  }
+}
+
+.sprinkle {
+  position: absolute;
+  animation: scale-pulse 2s ease-in-out infinite;
+  transition: all 0.7s ease-in-out;
+}
+
+/* Step 1 Sprinkles */
+.sprinkle-0-0 {
+  top: 227px;
+  left: 93px;
+  width: 24px;
+  height: 24px;
+  animation-delay: 0.2s;
+}
+
+.sprinkle-0-1 {
+  top: 178px;
+  right: 105px;
+  width: 12px;
+  height: 12px;
+  animation-delay: 1.5s;
+}
+
+.sprinkle-0-2 {
+  bottom: 479px;
+  left: 67px;
+  width: 16px;
+  height: 16px;
+  animation-delay: 0.8s;
+}
+
+.sprinkle-0-3 {
+  bottom: 284px;
+  right: 37px;
+  width: 8px;
+  height: 8px;
+  animation-delay: 1.2s;
+}
+
+.sprinkle-0-4 {
+  top: 365px;
+  right: 18px;
+  width: 16px;
+  height: 16px;
+  animation-delay: 0.5s;
+}
+
+.sprinkle-0-5 {
+  top: 649px;
+  left: 168px;
+  width: 12px;
+  height: 12px;
+  animation-delay: 1.8s;
+}
+
+/* Step 2 Sprinkles */
+.sprinkle-1-0 {
+  top: 40px;
+  right: 56px;
+  width: 20px;
+  height: 20px;
+  animation-delay: 0.3s;
+}
+
+.sprinkle-1-1 {
+  top: 324px;
+  left: 30px;
+  width: 12px;
+  height: 12px;
+  animation-delay: 1.6s;
+}
+
+.sprinkle-1-2 {
+  bottom: 121px;
+  right: 45px;
+  width: 16px;
+  height: 16px;
+  animation-delay: 0.9s;
+}
+
+.sprinkle-1-3 {
+  bottom: 81px;
+  left: 112px;
+  width: 8px;
+  height: 8px;
+  animation-delay: 1.4s;
+}
+
+/* Step 3 Sprinkles */
+.sprinkle-2-0 {
+  top: 146px;
+  left: 45px;
+  width: 16px;
+  height: 16px;
+  animation-delay: 0.4s;
+}
+
+.sprinkle-2-1 {
+  top: 64px;
+  right: 30px;
+  width: 12px;
+  height: 12px;
+  animation-delay: 1.7s;
+}
+
+.sprinkle-2-2 {
+  bottom: 227px;
+  left: 30px;
+  width: 20px;
+  height: 20px;
+  animation-delay: 0.6s;
+}
+
+.sprinkle-2-3 {
+  bottom: 406px;
+  right: 18px;
+  width: 8px;
+  height: 8px;
+  animation-delay: 1.3s;
+}
+
+.sprinkle-2-4 {
+  top: 487px;
+  right: 45px;
+  width: 16px;
+  height: 16px;
+  animation-delay: 0.1s;
+}
+
+.sprinkle-2-5 {
+  bottom: 64px;
+  left: 150px;
+  width: 12px;
+  height: 12px;
+  animation-delay: 1.9s;
+}
