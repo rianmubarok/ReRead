@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Image from "next/image";
+import GoogleIcon from "./icons/GoogleIcon";
 
 interface WalkthroughProps {
     onFinish: () => void;
@@ -39,7 +40,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
 
     return (
         <div className="absolute inset-0 z-[100] flex flex-col items-center justify-between min-h-screen bg-brand-white relative overflow-hidden">
-            <div className="flex-1 flex flex-col items-center justify-center w-full px-8 pt-20">
+            <div className="flex-1 flex flex-col items-center justify-center w-full px-8">
                 <div className="relative w-full h-60 mb-8">
                     <Image
                         src={steps[currentStep].image}
@@ -66,11 +67,11 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
                 </div>
 
                 {/* Indicators */}
-                <div className="flex gap-2 my-8">
+                <div className="flex gap-1 my-8">
                     {steps.map((_, index) => (
                         <div
                             key={index}
-                            className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentStep ? "w-8 bg-brand-red" : "bg-gray-300"
+                            className={`w-4 h-2 rounded-full transition-all duration-300 ${index === currentStep ? "w-8 bg-brand-red" : "bg-brand-red/15"
                                 }`}
                         />
                     ))}
@@ -79,19 +80,23 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
                 {/* Text Content */}
                 <div className="text-center space-y-4 max-w-xs animate-fade-in-up">
                     <h2 className="text-2xl font-medium text-brand-black font-sans">{steps[currentStep].title}</h2>
-                    <p className="text-brand-gray text-base leading-relaxed">{steps[currentStep].description}</p>
+                    <p className="text-brand-gray font-regular text-sm">{steps[currentStep].description}</p>
                 </div>
             </div>
 
             {/* Navigation & Controls */}
             <div className="w-full px-8 pb-12 flex flex-col gap-6 items-center">
                 {/* Buttons */}
-                <div className="w-full space-y-3">
+                <div className="w-full space-y-5">
                     <button
                         onClick={handleNext}
-                        className="w-full py-4 text-base bg-brand-red text-white font-semibold rounded-xl active:scale-95 transition-transform"
+                        className={`w-full py-4 text-sm font-semibold rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-3 ${currentStep === steps.length - 1
+                            ? "bg-brand-red/15 text-brand-red"
+                            : "bg-brand-red text-white"
+                            }`}
                     >
-                        {currentStep === steps.length - 1 ? "Masuk Sekarang" : "Lanjut"}
+                        {currentStep === steps.length - 1 && <GoogleIcon className="w-6 h-6" />}
+                        {currentStep === steps.length - 1 ? "Masuk Menggunakan Google" : "Lanjut"}
                     </button>
                 </div>
             </div>
