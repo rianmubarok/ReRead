@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans } from "next/font/google";
 import "./globals.css";
+import "../styles/animations.css";
+import "../styles/walkthrough.css";
 import MobileContainer from "@/components/MobileContainer";
 import BottomNav from "@/components/BottomNav";
 import { NavProvider } from "@/context/NavContext";

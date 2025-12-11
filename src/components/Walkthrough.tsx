@@ -39,23 +39,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
 
     return (
         <div className="absolute inset-0 z-[100] flex flex-col items-center justify-between min-h-screen bg-brand-white relative overflow-hidden">
-            {/* Dynamic Sprinkles */}
-            {Array.from({ length: steps[currentStep].sprinkleCount }).map((_, index) => (
-                <div
-                    key={index}
-                    className={`sprinkle sprinkle-${currentStep}-${index}`}
-                >
-                    <Image
-                        src="/assets/walkthrough/sprinkle.svg"
-                        alt="decoration"
-                        fill
-                        className="object-contain"
-                    />
-                </div>
-            ))}
-
             <div className="flex-1 flex flex-col items-center justify-center w-full px-8 pt-20">
-                {/* Image Carousel */}
                 <div className="relative w-full h-60 mb-8">
                     <Image
                         src={steps[currentStep].image}
@@ -64,6 +48,21 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
                         className="object-contain transition-all duration-500"
                         priority
                     />
+
+                    {/* Dynamic Sprinkles */}
+                    {Array.from({ length: steps[currentStep].sprinkleCount }).map((_, index) => (
+                        <div
+                            key={index}
+                            className={`sprinkle sprinkle-${currentStep}-${index}`}
+                        >
+                            <Image
+                                src="/assets/walkthrough/sprinkle.svg"
+                                alt="decoration"
+                                fill
+                                className="object-contain"
+                            />
+                        </div>
+                    ))}
                 </div>
 
                 {/* Indicators */}
@@ -94,7 +93,6 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
                     >
                         {currentStep === steps.length - 1 ? "Masuk Sekarang" : "Lanjut"}
                     </button>
-
                 </div>
             </div>
         </div>
