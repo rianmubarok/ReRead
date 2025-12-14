@@ -1,15 +1,36 @@
 import { User } from "@/types/user";
+import { getUser, setUser, clearUser } from "@/storage/user.storage";
+import { delay, DEV_MODE } from "@/utils/constants";
+import { generateId } from "@/utils/id";
+import { getStorageItem, removeStorageItem } from "@/utils/storage";
 
-// Mock delay helper
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+/**
+ * Migrate old localStorage key to new key (one-time migration)
+ */
+const migrateOldUserData = (): void => {
+  const oldKey = "auth_user";
+  const oldData = getStorageItem<any>(oldKey);
 
-// Dev Mode: Simulate authentication with localStorage
-const DEV_MODE = true; // Set to false when Firebase is ready
+  if (oldData && !getUser()) {
+    // Migrate old data to new storage
+    const migratedUser: User = {
+      id: oldData.uid || oldData.id,
+      uid: oldData.uid || oldData.id,
+      name: oldData.name || "User",
+      email: oldData.email,
+      avatar: oldData.avatar,
+      address: oldData.address,
+      onboardingCompleted: oldData.onboardingCompleted ?? true,
+    };
+    setUser(migratedUser);
+    removeStorageItem(oldKey); // Clean up old key
+  }
+};
 
 export const authService = {
   /**
-   * Login user (Dev Mode: saves to localStorage)
-   * TODO: Replace with Firebase Auth when ready
+   * Login user (Dev Mode: saves to localStorage via user.storage)
+   * TODO: Replace with Supabase Auth when ready
    */
   login: async (
     name: string,
@@ -19,10 +40,10 @@ export const authService = {
   ): Promise<User> => {
     await delay(1000); // Simulate network latency
 
-    const uid = `dev-user-${Math.random().toString(36).substr(2, 9)}`;
+    const uid = generateId("dev-user");
     const userData: User = {
       id: uid, // Keep id for backward compatibility
-      uid: uid, // Firebase-compatible uid
+      uid: uid, // Firebase/Supabase-compatible uid
       name,
       email: email || `test@mail.com`,
       avatar,
@@ -30,64 +51,40 @@ export const authService = {
       onboardingCompleted: true,
     };
 
-    // Dev Mode: Save to localStorage
-    if (DEV_MODE && typeof window !== "undefined") {
-      localStorage.setItem(
-        "auth_user",
-        JSON.stringify({
-          uid: userData.uid,
-          email: userData.email,
-          name: userData.name,
-          avatar: userData.avatar,
-          address: userData.address,
-          onboardingCompleted: userData.onboardingCompleted,
-        })
-      );
+    // Dev Mode: Save to localStorage via user.storage
+    if (DEV_MODE) {
+      setUser(userData);
     }
 
     return userData;
   },
 
   /**
-   * Logout user (Dev Mode: clears localStorage)
-   * TODO: Replace with Firebase Auth when ready
+   * Logout user (Dev Mode: clears localStorage via user.storage)
+   * TODO: Replace with Supabase Auth when ready
    */
   logout: async (): Promise<void> => {
     await delay(500);
 
-    // Dev Mode: Clear localStorage
-    if (DEV_MODE && typeof window !== "undefined") {
-      localStorage.removeItem("auth_user");
+    // Dev Mode: Clear localStorage via user.storage
+    if (DEV_MODE) {
+      clearUser();
     }
   },
 
   /**
-   * Check current session (Dev Mode: reads from localStorage)
-   * TODO: Replace with Firebase Auth when ready
+   * Check current session (Dev Mode: reads from localStorage via user.storage)
+   * TODO: Replace with Supabase Auth when ready
    */
   checkSession: async (): Promise<User | null> => {
     await delay(500);
 
-    // Dev Mode: Read from localStorage
-    if (DEV_MODE && typeof window !== "undefined") {
-      const stored = localStorage.getItem("auth_user");
-      if (stored) {
-        try {
-          const userData = JSON.parse(stored);
-          return {
-            id: userData.uid, // Map uid to id for compatibility
-            uid: userData.uid,
-            name: userData.name || "User",
-            email: userData.email,
-            avatar: userData.avatar,
-            address: userData.address,
-            onboardingCompleted: userData.onboardingCompleted ?? true,
-          };
-        } catch (error) {
-          console.error("Error parsing stored user:", error);
-          return null;
-        }
-      }
+    // Migrate old data if exists
+    migrateOldUserData();
+
+    // Dev Mode: Read from localStorage via user.storage
+    if (DEV_MODE) {
+      return getUser();
     }
 
     return null;

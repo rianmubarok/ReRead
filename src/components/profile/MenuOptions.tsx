@@ -15,13 +15,8 @@ export default function MenuOptions() {
     const router = useRouter();
 
     const handleLogout = async () => {
-        // Clear localStorage manually if needed (though authService.logout should do it)
-        // The user specifically asked to "delete local storage mode dev"
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem('user_session'); // Assuming this is the key from auth.service
-            localStorage.clear(); // Brute force clear as requested for "mode dev"
-        }
-
+        // authService.logout already handles clearing user data via user.storage
+        // For dev mode, we can optionally clear all storage if needed
         await logout();
         router.push('/'); // Will trigger onboarding flow
     };
