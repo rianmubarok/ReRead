@@ -25,7 +25,7 @@ export default function BookSection({ title, books, variant = "nearby" }: BookSe
     return (
         <div className="mb-8">
             {/* Header */}
-            <div className="flex justify-between items-end mb-4 px-2">
+            <div className="flex justify-between items-center mb-4">
                 <h2 className="text-lg font-bold text-brand-black">{title}</h2>
                 <button className="text-xs text-brand-black flex items-center gap-1 hover:opacity-70 transition-opacity">
                     Lihat Semua

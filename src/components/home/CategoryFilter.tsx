@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useDraggableScroll } from "@/hooks/useDraggableScroll";
 
 interface CategoryFilterProps {
@@ -15,12 +15,19 @@ export default function CategoryFilter({
     const { ref, events, isDragging } = useDraggableScroll();
     const categories = ["Semua", "Fiksi", "Non-Fiksi", "Pendidikan", "Komik", "Sastra"];
 
+    // Ensure scroll starts from left (scrollLeft = 0) on mount
+    useEffect(() => {
+        if (ref.current) {
+            ref.current.scrollLeft = 0;
+        }
+    }, []);
+
     return (
         <div
             {...events}
             ref={ref}
-            className={`flex gap-3 overflow-x-auto pb-6 -mx-6 px-6 no-scrollbar scroll-smooth
-        ${isDragging ? 'cursor-grabbing snap-none' : 'cursor-grab snap-x'}
+            className={`flex gap-3 overflow-x-auto pb-6 -mx-6 px-6 no-scrollbar
+        ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
       `}
         >
             {categories.map((cat) => (
