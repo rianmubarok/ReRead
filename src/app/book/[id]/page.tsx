@@ -74,7 +74,7 @@ export default function BookDetailsPage({ params }: { params: Promise<{ id: stri
                 </div>
             </div>
 
-            <ActionButtons />
+            <ActionButtons bookId={book.id} ownerId={book.owner.id} />
         </div>
     );
 }

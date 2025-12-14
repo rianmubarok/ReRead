@@ -8,9 +8,17 @@ interface ChatListItemProps {
     chat: ChatThread;
 }
 
+import { useRouter } from "next/navigation";
+
+// ... inside the component
 export default function ChatListItem({ chat }: ChatListItemProps) {
+    const router = useRouter();
+
     return (
-        <div className="flex items-start gap-4 p-4 -mx-4 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer active:scale-[0.99]">
+        <div
+            onClick={() => router.push(`/chat/${chat.id}`)}
+            className="flex items-start gap-4 p-4 -mx-4 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer active:scale-[0.99]"
+        >
             {/* Avatar */}
             <div className="relative w-12 h-12 flex-shrink-0 rounded-full overflow-hidden bg-gray-200 border border-gray-100">
                 {/* Simple logic for mock avatars */}
@@ -24,8 +32,8 @@ export default function ChatListItem({ chat }: ChatListItemProps) {
                     // Assuming we might have assets or just fallback to letter for now if asset missing
                     // For this mock, I'll use a colored div or placeholder if image valid logic isn't set up
                     <div className={`w-full h-full flex items-center justify-center ${chat.id === '2' ? 'bg-blue-100' :
-                            chat.id === '3' ? 'bg-green-100' :
-                                chat.id === '4' ? 'bg-purple-100' : 'bg-orange-100'
+                        chat.id === '3' ? 'bg-green-100' :
+                            chat.id === '4' ? 'bg-purple-100' : 'bg-orange-100'
                         }`}>
                         {/* 
                     Ideally use <Image /> if we have files. 

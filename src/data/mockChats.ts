@@ -11,7 +11,7 @@ export interface ChatThread {
 
 export const MOCK_CHATS: ChatThread[] = [
     {
-        id: "1",
+        id: "user1",
         user: { name: "Nadia Putri", avatar: "google" }, // Using google placeholder style matches design somewhat or custom
         // Design shows specific avatars. I'll use placeholders or existing assets if available.
         // For now, I'll use 'google' style or assume assets exist.
