@@ -146,7 +146,7 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
     return (
         <div className="absolute inset-0 z-[100] flex flex-col min-h-screen bg-brand-white overflow-hidden animate-fade-in-up">
             {/* Top Progress Bar */}
-            <div className="w-full px-8 pt-12 pb-8">
+            <div className="w-full px-8 pt-12 pb-16">
                 <div className="flex gap-2">
                     <div className={`h-1.5 flex-1 rounded-full transition-colors ${step >= 1 ? "bg-brand-red" : "bg-brand-red/15"}`} />
                     <div className={`h-1.5 flex-1 rounded-full transition-colors ${step >= 2 ? "bg-brand-red" : "bg-brand-red/15"}`} />
@@ -169,10 +169,10 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
                         </div>
 
                         {/* Form */}
-                        <div className="space-y-6">
+                        <div className="space-y-8">
                             {/* Nama Lengkap */}
-                            <div className="space-y-2">
-                                <label className="text-sm text-brand-black">Nama Lengkap</label>
+                            <div>
+                                <p className="text-sm text-brand-black font-medium mb-4">Nama Lengkap</p>
                                 <div className="relative">
                                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-brand-black z-10 pointer-events-none">
                                         <UserIcon className="w-5 h-5" />
@@ -186,8 +186,8 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
                             </div>
 
                             {/* Alamat */}
-                            <div className="space-y-3">
-                                <label className="text-sm text-brand-black">Alamat</label>
+                            <div>
+                                <p className="text-sm text-brand-black font-medium mb-4">Alamat</p>
                                 <div className="grid grid-cols-2 gap-3">
                                     {/* Provinsi */}
                                     <SearchableDropdown
