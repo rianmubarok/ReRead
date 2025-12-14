@@ -13,7 +13,7 @@ const ChatDetailHeader: React.FC<ChatDetailHeaderProps> = ({ name, status, avata
     const router = useRouter();
 
     return (
-        <div className="flex items-center justify-between px-6 py-4 pt-8 bg-white shadow-sm z-10 sticky top-0">
+        <div className="flex items-center justify-between px-6 py-4 pt-8 bg-white z-10 sticky top-0">
             <div className="flex items-center gap-3">
                 <button
                     onClick={() => router.back()}
@@ -26,11 +26,15 @@ const ChatDetailHeader: React.FC<ChatDetailHeaderProps> = ({ name, status, avata
                     {/* Placeholder for avatar logic - if it's a path or external url */}
                     {/* Simulating the avatar from design */}
                     <img
-                        src={avatar === 'google' ? '/assets/avatars/google-avatar.png' : avatar || '/assets/avatars/default.png'}
+                        src={avatar === 'google' ? '/assets/avatars/google-avatar.png' : `/assets/avatar/${avatar}`}
                         alt={name}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=random';
+                            // On error, try to show ui-avatars as last resort
+                            const target = e.target as HTMLImageElement;
+                            if (!target.src.includes('ui-avatars')) {
+                                target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=random';
+                            }
                         }}
                     />
                 </div>

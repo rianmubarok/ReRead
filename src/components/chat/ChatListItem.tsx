@@ -29,20 +29,27 @@ export default function ChatListItem({ chat }: ChatListItemProps) {
                         </span>
                     </div>
                 ) : (
-                    // Assuming we might have assets or just fallback to letter for now if asset missing
-                    // For this mock, I'll use a colored div or placeholder if image valid logic isn't set up
-                    <div className={`w-full h-full flex items-center justify-center ${chat.id === '2' ? 'bg-blue-100' :
-                        chat.id === '3' ? 'bg-green-100' :
-                            chat.id === '4' ? 'bg-purple-100' : 'bg-orange-100'
-                        }`}>
-                        {/* 
-                    Ideally use <Image /> if we have files. 
-                    I'll use text initial for now to be safe and clean, 
-                    matching the "Nadia" google style more or less if image fails.
-                  */}
-                        <span className="font-bold text-brand-black text-lg">
-                            {chat.user.name.charAt(0)}
-                        </span>
+                    <div className="relative w-full h-full">
+                        <Image
+                            src={`/assets/avatar/${chat.user.avatar}`}
+                            alt={chat.user.name}
+                            fill
+                            className="object-cover"
+                            onError={(e) => {
+                                // Fallback is handled by showing the div background
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                            }}
+                        />
+                        {/* Fallback initials underneath (visible if image fails/hidden) */}
+                        <div className={`absolute inset-0 flex items-center justify-center -z-10 ${chat.id === '2' ? 'bg-blue-100' :
+                                chat.id === '3' ? 'bg-green-100' :
+                                    chat.id === '4' ? 'bg-purple-100' : 'bg-orange-100'
+                            }`}>
+                            <span className="font-bold text-brand-black text-lg">
+                                {chat.user.name.charAt(0)}
+                            </span>
+                        </div>
                     </div>
                 )}
             </div>

@@ -12,7 +12,7 @@ export default function ProfilePage() {
 
     return (
         <div className="min-h-screen bg-brand-white pb-24 animate-fade-in">
-            <div className="px-6 pt-12">
+            <div className="px-6 pt-6">
                 <h1 className="text-2xl font-bold text-brand-black mb-2">Profil Saya</h1>
 
                 <UserInfo user={user} />

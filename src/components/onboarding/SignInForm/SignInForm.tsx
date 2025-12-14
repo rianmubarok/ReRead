@@ -93,7 +93,7 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
   return (
     <div className="absolute inset-0 z-[100] flex flex-col min-h-screen bg-brand-white overflow-hidden animate-fade-in-up">
       {/* Top Progress Bar */}
-      <div className="w-full px-8 pt-12 pb-16">
+      <div className="w-full px-8 pt-6 pb-16">
         <div className="flex gap-2">
           {Array.from({ length: TOTAL_STEPS }).map((_, index) => (
             <div
@@ -133,7 +133,7 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
       </div>
 
       {/* Bottom Button */}
-      <BottomContainer variant="absolute" withGradient className="p-8 gap-4">
+      <BottomContainer className="gap-4">
         {step > 1 && (
           <Button variant="outline" fullWidth onClick={handleBack} className="flex-1">
             Kembali

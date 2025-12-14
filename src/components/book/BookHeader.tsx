@@ -9,7 +9,7 @@ export default function BookHeader() {
     const [isBookmarked, setIsBookmarked] = useState(false);
 
     return (
-        <div className="flex justify-between items-center py-4 pt-12">
+        <div className="flex justify-between items-center py-4 pt-6">
             <button
                 onClick={() => router.back()}
                 className="p-2 -ml-2 text-brand-black hover:bg-gray-100 rounded-full transition-colors"

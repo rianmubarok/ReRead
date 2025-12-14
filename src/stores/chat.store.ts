@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { ChatMessage } from "@/services/chat.service";
+import { ChatMessage } from "@/types/chat";
 
 interface ChatState {
   // Messages by chat ID

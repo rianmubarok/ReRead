@@ -1,3 +1,5 @@
+import { MOCK_USERS, User } from "./mockUsers";
+
 export interface Book {
     id: string;
     title: string;
@@ -9,22 +11,10 @@ export interface Book {
     isTrending?: boolean;
     description: string;
     condition: "Baru" | "Baik" | "Bekas";
-    owner: {
-        id: string;
-        name: string;
-        avatar: string; // 'google' or path
-        location: string;
-        isVerified?: boolean;
-    };
+    owner: User;
+    price?: number; // Optional price for selling
+    createdAt: string;
 }
-
-const DEFAULT_OWNER = {
-    id: "user1",
-    name: "Nadia Putri",
-    avatar: "avatar_nadia.png", // We'll need to mock this or use placeholder
-    location: "Panggang, Jepara, Jawa Tengah",
-    isVerified: true
-};
 
 const DEFAULT_DESC = `Buku ini menurutku cukup membantu waktu aku lagi belajar memperbaiki cara berpikir dan membuat keputusan. Isinya ringan dan banyak contoh yang relevan, jadi enak dibaca. Sekarang aku sudah selesai membacanya dan ingin buku ini bermanfaat buat orang lain juga, jadi aku putuskan untuk melepasnya di sini.
 
@@ -39,13 +29,15 @@ export const MOCK_BOOKS: Book[] = [
         id: "1",
         title: "Sapiens Grafis",
         author: "Yuval Noah Harari",
-        image: "",
+        image: "/assets/books/sapiens.png", // Assuming these might exist or just placeholder
         location: "2 km dari lokasimu",
         distance: "2 km",
         category: "Non-Fiksi",
         description: DEFAULT_DESC,
         condition: "Baik",
-        owner: DEFAULT_OWNER
+        owner: MOCK_USERS[0], // user1
+        price: 150000,
+        createdAt: "2 jam yang lalu",
     },
     {
         id: "2",
@@ -57,7 +49,9 @@ export const MOCK_BOOKS: Book[] = [
         category: "Non-Fiksi",
         description: DEFAULT_DESC,
         condition: "Baik",
-        owner: DEFAULT_OWNER
+        owner: MOCK_USERS[1], // user2
+        price: 85000,
+        createdAt: "5 jam yang lalu",
     },
     {
         id: "3",
@@ -69,7 +63,8 @@ export const MOCK_BOOKS: Book[] = [
         category: "Non-Fiksi",
         description: DEFAULT_DESC,
         condition: "Bekas",
-        owner: DEFAULT_OWNER
+        owner: MOCK_USERS[2], // user3
+        createdAt: "1 hari yang lalu",
     },
     {
         id: "4",
@@ -81,7 +76,9 @@ export const MOCK_BOOKS: Book[] = [
         category: "Non-Fiksi",
         description: DEFAULT_DESC,
         condition: "Baik",
-        owner: DEFAULT_OWNER
+        owner: MOCK_USERS[3], // user4
+        price: 120000,
+        createdAt: "2 hari yang lalu",
     },
     {
         id: "5",
@@ -93,7 +90,9 @@ export const MOCK_BOOKS: Book[] = [
         category: "Non-Fiksi",
         description: DEFAULT_DESC,
         condition: "Baru",
-        owner: DEFAULT_OWNER
+        owner: MOCK_USERS[4], // user5
+        price: 95000,
+        createdAt: "3 hari yang lalu",
     },
     // Trending
     {
@@ -105,7 +104,9 @@ export const MOCK_BOOKS: Book[] = [
         isTrending: true,
         description: DEFAULT_DESC,
         condition: "Bekas",
-        owner: DEFAULT_OWNER
+        owner: MOCK_USERS[5],
+        price: 50000,
+        createdAt: "1 minggu yang lalu",
     },
     {
         id: "7",
@@ -116,7 +117,9 @@ export const MOCK_BOOKS: Book[] = [
         isTrending: true,
         description: DEFAULT_DESC,
         condition: "Baru",
-        owner: DEFAULT_OWNER
+        owner: MOCK_USERS[6],
+        price: 110000,
+        createdAt: "1 minggu yang lalu",
     },
     {
         id: "8",
@@ -127,7 +130,9 @@ export const MOCK_BOOKS: Book[] = [
         isTrending: true,
         description: DEFAULT_DESC,
         condition: "Baik",
-        owner: DEFAULT_OWNER
+        owner: MOCK_USERS[7],
+        price: 100000,
+        createdAt: "2 minggu yang lalu",
     },
     {
         id: "9",
@@ -138,7 +143,9 @@ export const MOCK_BOOKS: Book[] = [
         isTrending: true,
         description: DEFAULT_DESC,
         condition: "Baik",
-        owner: DEFAULT_OWNER
+        owner: MOCK_USERS[8],
+        price: 80000,
+        createdAt: "2 minggu yang lalu",
     },
     {
         id: "10",
@@ -149,6 +156,69 @@ export const MOCK_BOOKS: Book[] = [
         isTrending: true,
         description: DEFAULT_DESC,
         condition: "Baik",
-        owner: DEFAULT_OWNER
-    }
+        owner: MOCK_USERS[9],
+        price: 135000,
+        createdAt: "3 minggu yang lalu",
+    },
+    {
+        id: "11",
+        title: "Bumi Manusia",
+        author: "Pramoedya Ananta Toer",
+        image: "",
+        category: "Sastra",
+        isTrending: true,
+        description: DEFAULT_DESC,
+        condition: "Bekas",
+        owner: MOCK_USERS[1],
+        price: 90000,
+        createdAt: "1 bulan yang lalu",
+    },
+    {
+        id: "12",
+        title: "Cantik Itu Luka",
+        author: "Eka Kurniawan",
+        image: "",
+        category: "Sastra",
+        description: DEFAULT_DESC,
+        condition: "Baik",
+        owner: MOCK_USERS[2],
+        price: 115000,
+        createdAt: "1 bulan yang lalu",
+    },
+    {
+        id: "13",
+        title: "Dunia Sophie",
+        author: "Jostein Gaarder",
+        image: "",
+        category: "Fiksi",
+        description: DEFAULT_DESC,
+        condition: "Bekas",
+        owner: MOCK_USERS[5],
+        price: 75000,
+        createdAt: "1 bulan yang lalu",
+    },
+    {
+        id: "14",
+        title: "Pulang",
+        author: "Leila S. Chudori",
+        image: "",
+        category: "Fiksi",
+        description: DEFAULT_DESC,
+        condition: "Baru",
+        owner: MOCK_USERS[8],
+        price: 120000,
+        createdAt: "2 bulan yang lalu",
+    },
+    {
+        id: "15",
+        title: "Gadis Kretek",
+        author: "Ratih Kumala",
+        image: "",
+        category: "Fiksi",
+        description: DEFAULT_DESC,
+        condition: "Baik",
+        owner: MOCK_USERS[0],
+        price: 95000,
+        createdAt: "2 bulan yang lalu",
+    },
 ];

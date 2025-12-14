@@ -5,16 +5,21 @@ import { useParams, useSearchParams } from "next/navigation";
 import ChatDetailHeader from "@/components/chat/ChatDetailHeader";
 import ChatInput from "@/components/chat/ChatInput";
 import BookContextPanel from "@/components/chat/BookContextPanel";
+import MessageBubble from "@/components/chat/MessageBubble";
 import ChatBookCard from "@/components/chat/ChatBookCard";
 import { MOCK_CHATS } from "@/data/mockChats";
 import { MOCK_BOOKS } from "@/data/mockBooks";
 import { useNav } from "@/context/NavContext";
-import { chatService, ChatMessage } from "@/services/chat.service";
+import { chatService } from "@/services/chat.service";
+import { ChatMessage } from "@/types/chat";
 import { useChatStore } from "@/stores/chat.store";
 import { Book } from "@/data/mockBooks";
+import { parseMockDate, formatChatDate } from "@/utils/dateUtils";
+import { useAuth } from "@/context/AuthContext";
 
 export default function ChatDetailPage() {
     const { setVisible } = useNav();
+    const { user: currentUser } = useAuth();
     const params = useParams();
     const searchParams = useSearchParams();
     const chatId = params?.id as string;
@@ -40,7 +45,7 @@ export default function ChatDetailPage() {
     useEffect(() => {
         const initializeChat = async () => {
             setIsLoading(true);
-            
+
             // 1. Try to find existing chat by ID
             const existingChat = MOCK_CHATS.find(c => c.id === chatId);
 
@@ -57,7 +62,9 @@ export default function ChatDetailPage() {
                 const foundBook = MOCK_BOOKS.find(b => b.id === bookId);
                 if (foundBook) {
                     setBook(foundBook);
-                    setShowBookContext(true);
+                    // Only show BookContextPanel for NEW chats (not existing ones)
+                    // Existing chats already have book context in the first message (ChatBookCard)
+                    setShowBookContext(!existingChat);
                     // If we didn't find an existing chat, set the user from the book owner
                     if (!existingChat) {
                         setUser({
@@ -79,18 +86,35 @@ export default function ChatDetailPage() {
             // 3. Load messages from chat service/store
             try {
                 const loadedMessages = await chatService.getMessages(chatId);
-                
+
                 // If no messages exist but there's a last message in the chat, add it to store
-                if (loadedMessages.length === 0 && existingChat?.lastMessage) {
-                    const initialMessage: ChatMessage = {
-                        id: `init-${Date.now()}`,
-                        text: existingChat.lastMessage,
-                        sender: "them",
-                        timestamp: new Date(existingChat.timestamp)
-                    };
-                    // Add to store so it's consistent
-                    chatStore.addMessage(chatId, initialMessage);
-                    setMessages([initialMessage]);
+                if (loadedMessages.length === 0 && existingChat) {
+                    let initialMessages: ChatMessage[] = [];
+
+                    if (existingChat.messages && existingChat.messages.length > 0) {
+                        // Convert legacy messages to new format
+                        initialMessages = existingChat.messages.map((m, index) => ({
+                            id: m.id,
+                            text: m.text,
+                            senderId: m.senderId === "me" ? (currentUser?.id || "me") : existingChat.user.id,
+                            timestamp: parseMockDate(m.timestamp),
+                            // Only attach book context to the very first message of the conversation
+                            bookId: index === 0 ? existingChat.bookContext?.id : undefined,
+                            isRead: m.isRead,
+                        }));
+                    } else if (existingChat.lastMessage) {
+                        initialMessages = [{
+                            id: `init-${Date.now()}`,
+                            text: existingChat.lastMessage,
+                            senderId: existingChat.user.id,
+                            timestamp: parseMockDate(existingChat.timestamp),
+                            isRead: false,
+                        }];
+                    }
+
+                    // Add all to store
+                    initialMessages.forEach(msg => chatStore.addMessage(chatId, msg));
+                    setMessages(initialMessages);
                 } else {
                     setMessages(loadedMessages);
                 }
@@ -109,33 +133,33 @@ export default function ChatDetailPage() {
     // Subscribe to chat store changes for real-time updates
     useEffect(() => {
         if (!chatId) return;
-        
+
         const storeMessages = chatStore.getMessages(chatId);
         // Always sync with store to avoid duplicates
         // Deduplicate by ID and sort by timestamp
         const uniqueMessages = Array.from(
             new Map(storeMessages.map(msg => [msg.id, msg])).values()
         ).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-        
+
         // Only update if messages actually changed to avoid unnecessary re-renders
         setMessages(prev => {
             const prevIds = new Set(prev.map(m => m.id));
             const newIds = new Set(uniqueMessages.map(m => m.id));
-            
+
             // Check if messages actually changed
-            if (prev.length === uniqueMessages.length && 
+            if (prev.length === uniqueMessages.length &&
                 prev.every(m => newIds.has(m.id)) &&
                 uniqueMessages.every(m => prevIds.has(m.id))) {
                 return prev; // No change, return previous to avoid re-render
             }
-            
+
             return uniqueMessages;
         });
     }, [chatId, chatStore.messages]);
 
     // Handle sending message
     const handleSendMessage = async (text: string) => {
-        if (!text.trim() || !chatId) return;
+        if (!text.trim() || !chatId || !currentUser?.id) return;
 
         try {
             // Send message with bookId if book context exists
@@ -143,7 +167,8 @@ export default function ChatDetailPage() {
             await chatService.sendMessage(
                 chatId,
                 text,
-                book?.id
+                currentUser.id, // Pass current user ID
+                showBookContext ? book?.id : undefined
             );
         } catch (error) {
             console.error("Error sending message:", error);
@@ -176,99 +201,58 @@ export default function ChatDetailPage() {
             />
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 pb-24">
-                {messages.length === 0 && (
+            <div className="flex-1 overflow-y-auto p-4 flex flex-col [&::-webkit-scrollbar]:hidden">
+                {messages.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-gray-400 text-sm space-y-1 min-h-[200px]">
                         <p>Belum ada pesan.</p>
                         <p>Mulai percakapan dengan {user.name}</p>
                     </div>
-                )}
+                ) : (
+                    <div className="mt-auto space-y-3 pb-4">
+                        {(() => {
+                            let lastDate = "";
+                            return messages.map((msg, index) => {
+                                const messageDate = formatChatDate(msg.timestamp);
+                                const showDate = messageDate !== lastDate;
+                                lastDate = messageDate;
 
-                {messages.map((msg) => {
-                    const messageBook = msg.bookId ? MOCK_BOOKS.find(b => b.id === msg.bookId) : null;
-                    
-                    return (
-                        <div
-                            key={msg.id}
-                            className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'} items-end gap-2`}
-                        >
-                            {msg.sender === 'them' && (
-                                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                                    <img
-                                        src={user.avatar === 'google' ? '/assets/avatars/google-avatar.png' : user.avatar || '/assets/avatars/default.png'}
-                                        alt={user.name}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=random';
-                                        }}
-                                    />
-                                </div>
-                            )}
-                            <div className={`max-w-[75%] ${msg.sender === 'me' ? 'items-end' : 'items-start'} flex flex-col gap-1.5`}>
-                                {messageBook && (
-                                    <div className={`w-full ${msg.sender === 'me' ? 'bg-white/95' : 'bg-gray-50'} rounded-xl p-3 border ${msg.sender === 'me' ? 'border-gray-200' : 'border-gray-200'} shadow-sm`}>
-                                        <div className="flex gap-2.5">
-                                            <div className="w-12 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0 shadow-sm">
-                                                <img
-                                                    src={messageBook.image || "/assets/books/placeholder.png"}
-                                                    alt={messageBook.title}
-                                                    className="w-full h-full object-cover"
-                                                    onError={(e) => {
-                                                        (e.target as HTMLImageElement).src = `https://placehold.co/48x64/e0e0e0/333333?text=${messageBook.title.charAt(0)}`;
-                                                    }}
-                                                />
+                                return (
+                                    <React.Fragment key={msg.id}>
+                                        {showDate && (
+                                            <div className="flex justify-center my-4 sticky top-2 z-10">
+                                                <span className="bg-gray-100/80 backdrop-blur-sm text-gray-500 text-xs px-3 py-1 rounded-full">
+                                                    {messageDate}
+                                                </span>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className="font-semibold text-sm text-gray-900 truncate mb-0.5">{messageBook.title}</h4>
-                                                <p className="text-xs text-gray-500 truncate">{messageBook.author}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                                <div
-                                    className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                                        msg.sender === 'me'
-                                            ? 'bg-brand-red text-white rounded-br-sm'
-                                            : 'bg-white text-gray-800 border border-gray-100 rounded-bl-sm shadow-sm'
-                                    }`}
-                                >
-                                    {msg.text}
-                                </div>
-                            </div>
-                            {msg.sender === 'me' && (
-                                <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                                    <img
-                                        src="/assets/avatars/default.png"
-                                        alt="You"
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=You&background=random';
-                                        }}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
+                                        )}
+                                        <MessageBubble
+                                            message={msg}
+                                            user={user}
+                                            currentUserId={currentUser?.id || ""}
+                                        />
+                                    </React.Fragment>
+                                );
+                            });
+                        })()}
+                    </div>
+                )}
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Book Context Panel (Fixed at bottom, above input) */}
-            {showBookContext && book && (
-                <div className="fixed bottom-20 left-0 right-0 z-40 px-4 pointer-events-none">
-                    <div className="max-w-md mx-auto pointer-events-auto">
+            {/* Bottom Section: Context Panel + Input */}
+            <div className="z-30 bg-[#F8F9FA]">
+                {showBookContext && book && (
+                    <div>
                         <BookContextPanel
                             book={book}
                             onClose={() => setShowBookContext(false)}
                             onSendMessage={handleSendMessage}
                         />
                     </div>
+                )}
+                <div className="bg-[#F8F9FA]">
+                    <ChatInput onSendMessage={handleSendMessage} />
                 </div>
-            )}
-
-            {/* Input Area */}
-            <div className="relative z-30">
-                <ChatInput onSendMessage={handleSendMessage} />
             </div>
         </div>
     );
