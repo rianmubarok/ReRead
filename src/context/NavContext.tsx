@@ -10,7 +10,8 @@ interface NavContextType {
 const NavContext = createContext<NavContextType | undefined>(undefined);
 
 export function NavProvider({ children }: { children: React.ReactNode }) {
-    const [isVisible, setVisible] = useState(true);
+    // Default to false to prevent flash of bottom nav before auth check
+    const [isVisible, setVisible] = useState(false);
 
     return (
         <NavContext.Provider value={{ isVisible, setVisible }}>

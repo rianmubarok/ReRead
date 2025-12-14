@@ -18,41 +18,47 @@ export default function Home() {
 
   const [category, setCategory] = useState("Semua");
 
-  // Initialize state - will be controlled by useEffect based on auth status
+  // Initialize state - will be set based on auth status
   const [showSplash, setShowSplash] = useState(false);
   const [showWalkthrough, setShowWalkthrough] = useState(false);
   const [showSignIn, setShowSignIn] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Wait for auth check to complete
+    // Immediately hide nav while checking auth to prevent flash
     if (isAuthLoading) {
+      setVisible(false);
       return;
     }
 
-    // If authenticated, skip everything immediately
-    if (isAuthenticated && user?.onboardingCompleted) {
-      setShowSplash(false);
-      setShowWalkthrough(false);
-      setShowSignIn(false);
-      setVisible(true); // Show nav
-      return;
-    }
+    // Mark as initialized after first auth check
+    if (!isInitialized) {
+      setIsInitialized(true);
 
-    // If not authenticated, start onboarding flow
-    if (!isAuthenticated) {
-      // Only start splash if we haven't started onboarding yet
-      if (!showSplash && !showWalkthrough && !showSignIn) {
+      // If authenticated, skip everything immediately
+      if (isAuthenticated && user?.onboardingCompleted) {
+        setShowSplash(false);
+        setShowWalkthrough(false);
+        setShowSignIn(false);
+        setVisible(true); // Show nav
+        return;
+      }
+
+      // If not authenticated, start onboarding with splash
+      if (!isAuthenticated) {
         setShowSplash(true);
+        setVisible(false);
+        return;
       }
     }
 
-    // Control nav visibility
+    // Control nav visibility for subsequent updates
     if (showSplash || showWalkthrough || showSignIn) {
       setVisible(false);
     } else {
       setVisible(true);
     }
-  }, [showSplash, showWalkthrough, showSignIn, setVisible, isAuthenticated, isAuthLoading, user?.onboardingCompleted]);
+  }, [showSplash, showWalkthrough, showSignIn, setVisible, isAuthenticated, isAuthLoading, user?.onboardingCompleted, isInitialized]);
 
   const handleSplashFinish = () => {
     if (isAuthenticated) return; // Should be handled by effect, but safety
@@ -69,8 +75,14 @@ export default function Home() {
     setShowSignIn(false);
   }
 
-  // Main Home Page Content
-  if (!isAuthLoading && isAuthenticated && user?.onboardingCompleted) {
+  // Show loading state while checking auth - prevent flash of content
+  // Don't render ANYTHING until auth check is complete
+  if (isAuthLoading || !isInitialized) {
+    return null;
+  }
+
+  // Main Home Page Content - only show if authenticated
+  if (isAuthenticated && user?.onboardingCompleted) {
     return (
       <div className="min-h-screen bg-brand-white pb-24 animate-fade-in">
         <div className="px-6">
@@ -94,12 +106,14 @@ export default function Home() {
     );
   }
 
-  // Show loading state while checking auth
-  if (isAuthLoading) {
-    return null; // Or a loading spinner
+  // Show onboarding flow for unauthenticated users
+  // This should only render after isInitialized is true and user is not authenticated
+  // Ensure at least splash screen is shown
+  if (!showSplash && !showWalkthrough && !showSignIn) {
+    // This should not happen, but force show splash as fallback
+    return <SplashScreen onFinish={handleSplashFinish} />;
   }
 
-  // Show onboarding flow for unauthenticated users
   return (
     <>
       {showSplash && <SplashScreen onFinish={handleSplashFinish} />}
@@ -110,13 +124,6 @@ export default function Home() {
 
       {!showSplash && !showWalkthrough && showSignIn && (
         <SignInForm onFinish={handleSignInFinish} />
-      )}
-
-      {!showSplash && !showWalkthrough && !showSignIn && (
-        <div className="flex flex-col items-center justify-center min-h-screen p-8 gap-8 font-sans animate-fade-in-up">
-          <h1 className="text-4xl font-bold">ReRead Project</h1>
-          {/* Main Home Content will go here */}
-        </div>
       )}
     </>
   );

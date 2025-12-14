@@ -6,6 +6,8 @@ import Step1NameAddress from "./Step1NameAddress";
 import Step2Avatar from "./Step2Avatar";
 import Step3Location from "./Step3Location";
 import { useAddressData } from "./hooks/useAddressData";
+import BottomContainer from "@/components/ui/BottomContainer";
+import Button from "@/components/ui/Button";
 
 interface SignInFormProps {
   onFinish: () => void;
@@ -78,9 +80,8 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
           {Array.from({ length: TOTAL_STEPS }).map((_, index) => (
             <div
               key={index}
-              className={`h-1.5 flex-1 rounded-full transition-colors ${
-                step >= index + 1 ? "bg-brand-red" : "bg-brand-red/15"
-              }`}
+              className={`h-1.5 flex-1 rounded-full transition-colors ${step >= index + 1 ? "bg-brand-red" : "bg-brand-red/15"
+                }`}
             />
           ))}
         </div>
@@ -106,23 +107,22 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
       </div>
 
       {/* Bottom Button */}
-      <div className="absolute bottom-0 left-0 right-0 p-8 bg-gradient-to-t from-white via-white to-transparent flex gap-4">
+      <BottomContainer variant="absolute" withGradient className="p-8 gap-4">
         {step > 1 && (
-          <button
-            onClick={handleBack}
-            className="flex-1 bg-brand-red/15 text-brand-red py-4 rounded-xl font-semibold text-sm active:scale-95 transition-transform"
-          >
+          <Button variant="outline" fullWidth onClick={handleBack} className="flex-1">
             Kembali
-          </button>
+          </Button>
         )}
-        <button
+        <Button
+          variant="primary"
+          fullWidth
           onClick={handleNext}
           disabled={isLoading}
-          className="flex-1 bg-brand-red text-white py-4 rounded-xl font-semibold text-sm active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex-1"
         >
           {isLoading ? "Memproses..." : "Lanjut"}
-        </button>
-      </div>
+        </Button>
+      </BottomContainer>
     </div>
   );
 }

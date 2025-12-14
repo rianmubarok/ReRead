@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { RiMapPinLine } from "@remixicon/react";
 import { Book } from "@/data/mockBooks";
+import Link from "next/link";
 
 interface BookCardProps {
     book: Book;
@@ -12,7 +13,10 @@ interface BookCardProps {
 
 export default function BookCard({ book, variant = "nearby" }: BookCardProps) {
     return (
-        <div className="flex-shrink-0 flex flex-col gap-3 group cursor-pointer active:scale-95 transition-transform w-36">
+        <Link
+            href={`/book/${book.id}`}
+            className="flex-shrink-0 flex flex-col gap-3 group cursor-pointer active:scale-95 transition-transform w-36"
+        >
             {/* Cover Image */}
             <div className="relative rounded-xl overflow-hidden shadow-sm aspect-[2/3] bg-gray-200 flex items-center justify-center">
                 {book.image ? (
@@ -32,6 +36,7 @@ export default function BookCard({ book, variant = "nearby" }: BookCardProps) {
                 )}
             </div>
 
+            {/* Info */}
             <div className="space-y-1">
                 <h3 className="font-bold text-brand-black line-clamp-1">
                     {book.title}
@@ -46,6 +51,6 @@ export default function BookCard({ book, variant = "nearby" }: BookCardProps) {
                     <p className="text-xs text-brand-gray line-clamp-1">{book.author}</p>
                 )}
             </div>
-        </div>
+        </Link>
     );
 }

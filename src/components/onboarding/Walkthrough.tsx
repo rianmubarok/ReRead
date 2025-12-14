@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import GoogleIcon from "../icons/GoogleIcon";
+import Button from "@/components/ui/Button";
+import BottomContainer from "@/components/ui/BottomContainer";
 
 interface WalkthroughProps {
   onFinish: () => void;
@@ -43,7 +45,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
 
   return (
     <div className="absolute inset-0 z-[100] flex flex-col items-center justify-between min-h-screen bg-brand-white relative overflow-hidden">
-      <div className="flex-1 flex flex-col items-center justify-center w-full px-8">
+      <div className="flex-1 flex flex-col items-center justify-center w-full px-8 pb-16">
         <div className="relative w-full h-60 mb-8">
           <Image
             src={steps[currentStep].image}
@@ -76,9 +78,8 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
           {steps.map((_, index) => (
             <div
               key={index}
-              className={`w-4 h-1.5 rounded-full transition-all duration-300 ${
-                index === currentStep ? "w-8 bg-brand-red" : "bg-brand-red/15"
-              }`}
+              className={`w-8 h-1.5 rounded-full transition-all duration-300 ${index === currentStep ? "w-10 bg-brand-red" : "bg-brand-red/15"
+                }`}
             />
           ))}
         </div>
@@ -95,26 +96,21 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
       </div>
 
       {/* Navigation & Controls */}
-      <div className="w-full px-8 pb-12 flex flex-col gap-6 items-center">
-        {/* Buttons */}
-        <div className="w-full space-y-5">
-          <button
-            onClick={handleNext}
-            className={`w-full py-4 text-sm font-semibold rounded-xl active:scale-95 transition-transform flex items-center justify-center gap-3 ${
-              currentStep === steps.length - 1
-                ? "bg-brand-red/15 text-brand-red"
-                : "bg-brand-red text-white"
-            }`}
-          >
-            {currentStep === steps.length - 1 && (
-              <GoogleIcon className="w-6 h-6" />
-            )}
-            {currentStep === steps.length - 1
-              ? "Masuk Menggunakan Google"
-              : "Lanjut"}
-          </button>
-        </div>
-      </div>
+      <BottomContainer>
+        <Button
+          onClick={handleNext}
+          variant={currentStep === steps.length - 1 ? "outline" : "primary"}
+          fullWidth
+          className="flex items-center justify-center gap-3"
+        >
+          {currentStep === steps.length - 1 && (
+            <GoogleIcon className="w-6 h-6" />
+          )}
+          {currentStep === steps.length - 1
+            ? "Masuk Menggunakan Google"
+            : "Lanjut"}
+        </Button>
+      </BottomContainer>
     </div>
   );
 }
