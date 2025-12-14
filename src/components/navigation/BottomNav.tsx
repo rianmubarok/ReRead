@@ -44,7 +44,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 w-full max-w-md bg-white border-t border-gray-100 h-24 flex items-center justify-around z-50 px-2 pb-2 rounded-t-4xl">
+    <div className="fixed bottom-0 w-full max-w-md bg-white h-24 flex items-center justify-around z-50 px-2 pb-2 rounded-t-4xl">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         const Icon = isActive ? item.iconFill : item.iconLine;

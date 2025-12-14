@@ -96,6 +96,16 @@ export default function Home() {
     }, 400); // Match animation duration
   };
 
+  // Handle justLoggedIn state cleanup
+  useEffect(() => {
+    if (justLoggedIn) {
+      const timer = setTimeout(() => {
+        setJustLoggedIn(false);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [justLoggedIn]);
+
   // Show loading state while checking auth - prevent flash of content
   // Don't render ANYTHING until auth check is complete
   if (isAuthLoading || !isInitialized) {
@@ -104,25 +114,39 @@ export default function Home() {
 
   // Main Home Page Content - only show if authenticated
   if (isAuthenticated && user?.onboardingCompleted) {
+    // Use complex animation only when coming from signin
+    const useComplexAnimation = justLoggedIn;
+    // Always use fade-in like other pages, unless we're doing the complex login animation
+    const useSimpleAnimation = !justLoggedIn;
+
     return (
-      <div className={`min-h-screen bg-brand-white pb-24 overflow-hidden ${justLoggedIn ? "animate-fade-in-up" : ""}`}>
+      <div
+        className={`min-h-screen bg-brand-white pb-24 overflow-hidden ${useComplexAnimation ? "animate-fade-in-up" : useSimpleAnimation ? "animate-fade-in" : ""
+          }`}
+      >
         <div className="px-6">
-          <div className={justLoggedIn ? "animate-slide-up" : ""}>
+          <div className={useComplexAnimation ? "animate-slide-up" : ""}>
             <HomeHeader user={user} />
           </div>
 
-          <div className={justLoggedIn ? "animate-slide-up animate-delay-100" : ""}>
+          <div
+            className={useComplexAnimation ? "animate-slide-up animate-delay-100" : ""}
+          >
             <SearchBar />
           </div>
 
-          <div className={justLoggedIn ? "animate-slide-up animate-delay-200" : ""}>
+          <div
+            className={useComplexAnimation ? "animate-slide-up animate-delay-200" : ""}
+          >
             <CategoryFilter
               selectedCategory={category}
               onSelectCategory={setCategory}
             />
           </div>
 
-          <div className={justLoggedIn ? "animate-slide-up animate-delay-300" : ""}>
+          <div
+            className={useComplexAnimation ? "animate-slide-up animate-delay-300" : ""}
+          >
             <BookSection
               title="Terdekat"
               books={MOCK_BOOKS.slice(0, 5)}
@@ -130,7 +154,9 @@ export default function Home() {
             />
           </div>
 
-          <div className={justLoggedIn ? "animate-slide-up animate-delay-400" : ""}>
+          <div
+            className={useComplexAnimation ? "animate-slide-up animate-delay-400" : ""}
+          >
             <BookSection
               title="Trending"
               books={MOCK_BOOKS.slice(5, 10)}

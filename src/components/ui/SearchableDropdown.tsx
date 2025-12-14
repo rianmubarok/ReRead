@@ -65,19 +65,17 @@ export default function SearchableDropdown({
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled || isLoading}
-        className={`w-full bg-gray-100 rounded-xl px-4 py-3 flex items-center justify-between transition-all duration-200 border border-transparent
-        ${
-          disabled
+        className={`w-full bg-gray-100 rounded-xl px-4 py-3 flex items-center justify-between transition-all duration-200
+        ${disabled
             ? "opacity-50 cursor-not-allowed"
             : "hover:bg-gray-200 cursor-pointer"
-        }
+          }
         ${isOpen ? "ring-2 ring-brand-red/20 bg-white" : ""}
         `}
       >
         <span
-          className={`text-sm truncate ${
-            selectedOption ? "text-brand-black" : "text-brand-gray"
-          }`}
+          className={`text-sm truncate ${selectedOption ? "text-brand-black" : "text-brand-gray"
+            }`}
         >
           {isLoading
             ? "Loading..."
@@ -86,9 +84,8 @@ export default function SearchableDropdown({
               : placeholder}
         </span>
         <RiArrowDownSLine
-          className={`w-5 h-5 text-brand-gray transition-transform duration-200 ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          className={`w-5 h-5 text-brand-gray transition-transform duration-200 ${isOpen ? "rotate-180" : ""
+            }`}
         />
       </button>
 
@@ -119,11 +116,10 @@ export default function SearchableDropdown({
                   type="button"
                   onClick={() => handleSelect(opt.code)}
                   className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-50 transition-colors
-                  ${
-                    value === opt.code
+                  ${value === opt.code
                       ? "text-brand-red font-medium bg-brand-red/5"
                       : "text-brand-black"
-                  }
+                    }
                   `}
                 >
                   {opt.name}

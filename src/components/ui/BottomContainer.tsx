@@ -28,7 +28,7 @@ export default function BottomContainer({
   const positionClass = variant === "fixed" ? "fixed" : "absolute";
   const gradientClass = withGradient
     ? "bg-gradient-to-t from-white via-white to-transparent"
-    : "bg-white border-t border-gray-100";
+    : "bg-white";
 
   return (
     <div

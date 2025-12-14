@@ -49,10 +49,9 @@ export default function Step2Avatar({
         <button
           onClick={() => onAvatarChange("google")}
           className={`aspect-square rounded-full flex items-center justify-center relative overflow-hidden transition-all border-2
-            ${
-              selectedAvatar === "google"
-                ? "border-brand-red scale-105"
-                : "border-transparent bg-gray-100 hover:bg-gray-200"
+            ${selectedAvatar === "google"
+              ? "border-brand-red scale-105"
+              : ""
             }
           `}
         >
@@ -65,10 +64,9 @@ export default function Step2Avatar({
             key={fileName}
             onClick={() => onAvatarChange(fileName)}
             className={`aspect-square rounded-full relative overflow-hidden transition-all border-2
-              ${
-                selectedAvatar === fileName
-                  ? "border-brand-red scale-105"
-                  : "border-transparent bg-gray-100 hover:bg-gray-200"
+              ${selectedAvatar === fileName
+                ? "border-brand-red scale-105"
+                : ""
               }
             `}
           >

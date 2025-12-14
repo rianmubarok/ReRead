@@ -9,16 +9,18 @@ import Link from "next/link";
 interface BookCardProps {
     book: Book;
     variant?: "nearby" | "trending";
+    className?: string;
+    fullWidth?: boolean;
 }
 
-export default function BookCard({ book, variant = "nearby" }: BookCardProps) {
+export default function BookCard({ book, variant = "nearby", className, fullWidth = false }: BookCardProps) {
     return (
         <Link
             href={`/book/${book.id}`}
-            className="flex-shrink-0 flex flex-col gap-3 group cursor-pointer active:scale-95 transition-transform w-36"
+            className={`flex-shrink-0 flex flex-col gap-3 group cursor-pointer active:scale-95 transition-transform ${fullWidth ? "w-full" : "w-36"} ${className || ""}`}
         >
             {/* Cover Image */}
-            <div className="relative rounded-xl overflow-hidden shadow-sm aspect-[2/3] bg-gray-200 flex items-center justify-center">
+            <div className="relative rounded-xl overflow-hidden aspect-[2/3] bg-gray-200 flex items-center justify-center">
                 {book.image ? (
                     <Image
                         src={book.image}
