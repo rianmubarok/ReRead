@@ -6,10 +6,17 @@ import Walkthrough from "@/components/onboarding/Walkthrough";
 import SignInForm from "@/components/onboarding/SignInForm";
 import { useNav } from "@/context/NavContext";
 import { useAuth } from "@/context/AuthContext";
+import HomeHeader from "@/components/home/HomeHeader";
+import SearchBar from "@/components/home/SearchBar";
+import CategoryFilter from "@/components/home/CategoryFilter";
+import BookSection from "@/components/home/BookSection";
+import { MOCK_BOOKS } from "@/data/mockBooks";
 
 export default function Home() {
   const { setVisible } = useNav();
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
+
+  const [category, setCategory] = useState("Semua");
 
   // Initialize state - will be controlled by useEffect based on auth status
   const [showSplash, setShowSplash] = useState(false);
@@ -62,12 +69,27 @@ export default function Home() {
     setShowSignIn(false);
   }
 
-  // Early return: if authenticated, skip all onboarding
+  // Main Home Page Content
   if (!isAuthLoading && isAuthenticated && user?.onboardingCompleted) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen p-8 gap-8 font-sans animate-fade-in-up">
-        <h1 className="text-4xl font-bold">ReRead Project</h1>
-        {/* Main Home Content will go here */}
+      <div className="min-h-screen bg-brand-white pb-24 animate-fade-in">
+        <div className="px-6">
+          <HomeHeader user={user} />
+          <SearchBar />
+          <CategoryFilter selectedCategory={category} onSelectCategory={setCategory} />
+
+          <BookSection
+            title="Terdekat"
+            books={MOCK_BOOKS.slice(0, 5)}
+            variant="nearby"
+          />
+
+          <BookSection
+            title="Trending"
+            books={MOCK_BOOKS.slice(5, 10)}
+            variant="trending"
+          />
+        </div>
       </div>
     );
   }
