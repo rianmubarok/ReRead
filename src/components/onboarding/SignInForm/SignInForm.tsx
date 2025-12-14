@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
 import { TOTAL_STEPS } from "./constants";
@@ -16,6 +16,8 @@ interface SignInFormProps {
 export default function SignInForm({ onFinish }: SignInFormProps) {
   const { login } = useAuth();
   const [step, setStep] = useState(1);
+  const [displayStep, setDisplayStep] = useState(1);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const [name, setName] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState<string>("google");
   const [isLoading, setIsLoading] = useState(false);
@@ -27,6 +29,22 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
     selectedDistrict,
     selectedVillage,
   } = addressData;
+
+  // Handle step transition with animation
+  useEffect(() => {
+    if (step !== displayStep) {
+      setIsTransitioning(true);
+      // Wait for fade out, then change content and fade in
+      const timer = setTimeout(() => {
+        setDisplayStep(step);
+        // Reset transition state after content change
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 50);
+      }, 300); // Half of animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [step, displayStep]);
 
   const handleNext = async () => {
     if (step < TOTAL_STEPS) {
@@ -87,23 +105,31 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
         </div>
       </div>
 
-      <div className="flex-1 px-8 overflow-y-auto pb-32">
-        {step === 1 && (
-          <Step1NameAddress
-            name={name}
-            onNameChange={setName}
-            addressData={addressData}
-          />
-        )}
+      <div className="flex-1 px-8 overflow-y-auto pb-32 relative">
+        <div
+          key={displayStep}
+          className={isTransitioning ? "opacity-0 -translate-x-4" : "animate-slide-fade"}
+          style={{
+            transition: isTransitioning ? "opacity 0.3s ease-out, transform 0.3s ease-out" : "none"
+          }}
+        >
+          {displayStep === 1 && (
+            <Step1NameAddress
+              name={name}
+              onNameChange={setName}
+              addressData={addressData}
+            />
+          )}
 
-        {step === 2 && (
-          <Step2Avatar
-            selectedAvatar={selectedAvatar}
-            onAvatarChange={setSelectedAvatar}
-          />
-        )}
+          {displayStep === 2 && (
+            <Step2Avatar
+              selectedAvatar={selectedAvatar}
+              onAvatarChange={setSelectedAvatar}
+            />
+          )}
 
-        {step === 3 && <Step3Location />}
+          {displayStep === 3 && <Step3Location />}
+        </div>
       </div>
 
       {/* Bottom Button */}

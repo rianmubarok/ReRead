@@ -31,14 +31,12 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
 
   return (
     <div
-      className={`absolute inset-0 z-[200] flex flex-col items-center justify-center bg-brand-red transition-opacity duration-500 ${
-        fading ? "opacity-0" : "opacity-100"
-      }`}
+      className={`absolute inset-0 z-[200] flex flex-col items-center justify-center bg-brand-red transition-opacity duration-500 ${fading ? "opacity-0" : "opacity-100"
+        }`}
     >
       <div
-        className={`relative w-20 h-20 transition-all duration-1000 ease-out transform ${
-          mounted ? "opacity-100 scale-100" : "opacity-0 scale-75"
-        }`}
+        className={`relative w-20 h-20 transition-all duration-1000 ease-out transform ${mounted ? "opacity-100 scale-100" : "opacity-0 scale-75"
+          }`}
       >
         <Image
           src="/assets/logo/logo.svg"
@@ -49,9 +47,8 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
         />
       </div>
       <h1
-        className={`text-brand-white text-xl font-sans font-medium transition-all duration-1000 delay-300 ease-out transform ${
-          mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-        }`}
+        className={`text-brand-white text-xl font-sans font-medium transition-all duration-1000 delay-300 ease-out transform ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+          }`}
       >
         ReRead
       </h1>

@@ -41,7 +41,7 @@ export default function RootLayout({
         <AuthProvider>
           <NavProvider>
             <MobileContainer>
-              <main className="flex-1 overflow-y-auto">
+              <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
                 {children}
               </main>
               <BottomNav />
