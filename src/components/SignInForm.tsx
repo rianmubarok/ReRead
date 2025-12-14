@@ -28,6 +28,14 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
 
     const [isLoading, setIsLoading] = useState(false);
 
+    // Avatar State
+    const [selectedAvatar, setSelectedAvatar] = useState<string>("google");
+
+    const AVATARS = [
+        "B1.png", "B2.png", "B3.png", "B4.png", "B5.png",
+        "G1.png", "G2.png", "G3.png", "G4.png"
+    ];
+
     useEffect(() => {
         fetchProvinces();
     }, []);
@@ -238,20 +246,54 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
 
                         {/* Avatar Preview */}
                         <div className="flex justify-center">
-                            <div className="w-40 h-40 bg-[#FBEF86] rounded-full flex items-center justify-center relative overflow-hidden">
-                                {/* Placeholder Avatar */}
+                            <div className="w-40 h-40 bg-[#FBEF86] rounded-full flex items-center justify-center relative overflow-hidden transition-all duration-300">
+                                {/* Preview Logic */}
                                 <div className="w-full h-full relative">
-                                    {/* Using a simple placeholder colored circle for now or generic user icon scale up if no image */}
-                                    {/* In a real app we'd map the selected avatar here */}
-                                    <div className="absolute inset-4 bg-brand-black rounded-full opacity-10"></div>
+                                    {selectedAvatar === "google" ? (
+                                        <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                                            <span className="text-4xl text-gray-400 font-bold">G</span>
+                                        </div>
+                                    ) : (
+                                        <Image
+                                            src={`/assets/avatar/${selectedAvatar}`}
+                                            alt="Selected Avatar"
+                                            fill
+                                            className="object-cover"
+                                        />
+                                    )}
                                 </div>
                             </div>
                         </div>
 
                         {/* Avatar Grid */}
                         <div className="grid grid-cols-5 gap-4">
-                            {Array.from({ length: 10 }).map((_, i) => (
-                                <div key={i} className="aspect-square bg-gray-100 rounded-full hover:bg-gray-200 transition-colors cursor-pointer" />
+                            {/* Slot 1: Google Placeholder */}
+                            <button
+                                onClick={() => setSelectedAvatar("google")}
+                                className={`aspect-square rounded-full flex items-center justify-center relative overflow-hidden transition-all border-2
+                                    ${selectedAvatar === "google" ? "border-brand-red scale-105" : "border-transparent bg-gray-100 hover:bg-gray-200"}
+                                `}
+                            >
+                                <span className="text-brand-gray font-medium">G</span>
+                            </button>
+
+                            {/* Slots 2-10: Asset Avatars */}
+                            {AVATARS.map((fileName, i) => (
+                                <button
+                                    key={fileName}
+                                    onClick={() => setSelectedAvatar(fileName)}
+                                    className={`aspect-square rounded-full relative overflow-hidden transition-all border-2
+                                        ${selectedAvatar === fileName ? "border-brand-red scale-105" : "border-transparent bg-gray-100 hover:bg-gray-200"}
+                                    `}
+                                >
+                                    <Image
+                                        src={`/assets/avatar/${fileName}`}
+                                        alt={`Avatar ${i + 1}`}
+                                        fill
+                                        sizes="64px"
+                                        className="object-cover"
+                                    />
+                                </button>
                             ))}
                         </div>
                     </div>
