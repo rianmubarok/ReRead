@@ -3,9 +3,11 @@ import { DM_Sans } from "next/font/google";
 import "./globals.css";
 import "../styles/animations.css";
 import "../styles/walkthrough.css";
-import MobileContainer from "@/components/MobileContainer";
-import BottomNav from "@/components/BottomNav";
+import MobileContainer from "@/components/layout/MobileContainer";
+import BottomNav from "@/components/navigation/BottomNav";
 import { NavProvider } from "@/context/NavContext";
+import { AuthProvider } from "@/context/AuthContext";
+import { Toaster } from "react-hot-toast";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -36,14 +38,23 @@ export default function RootLayout({
       <body
         className={`${dmSans.variable} antialiased`}
       >
-        <NavProvider>
-          <MobileContainer>
-            <main className="flex-1 overflow-y-auto">
-              {children}
-            </main>
-            <BottomNav />
-          </MobileContainer>
-        </NavProvider>
+        <AuthProvider>
+          <NavProvider>
+            <MobileContainer>
+              <main className="flex-1 overflow-y-auto">
+                {children}
+              </main>
+              <BottomNav />
+            </MobileContainer>
+          </NavProvider>
+        </AuthProvider>
+        <Toaster position="top-center" toastOptions={{
+          style: {
+            background: '#333',
+            color: '#fff',
+          },
+          className: 'text-sm font-medium',
+        }} />
       </body>
     </html>
   );
