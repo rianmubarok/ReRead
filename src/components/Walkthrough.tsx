@@ -71,7 +71,7 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
                     {steps.map((_, index) => (
                         <div
                             key={index}
-                            className={`w-4 h-2 rounded-full transition-all duration-300 ${index === currentStep ? "w-8 bg-brand-red" : "bg-brand-red/15"
+                            className={`w-4 h-1.5 rounded-full transition-all duration-300 ${index === currentStep ? "w-8 bg-brand-red" : "bg-brand-red/15"
                                 }`}
                         />
                     ))}
