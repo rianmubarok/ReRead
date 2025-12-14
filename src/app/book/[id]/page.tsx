@@ -29,7 +29,7 @@ export default function BookDetailsPage({ params }: { params: Promise<{ id: stri
                 <BookHeader />
 
                 {/* Book Cover */}
-                <div className="w-full aspect-[2/3] relative rounded-2xl overflow-hidden shadow-lg my-6 bg-gray-100 flex items-center justify-center max-w-[240px] mx-auto">
+                <div className="w-full aspect-[2/3] relative rounded-2xl overflow-hidden my-6 bg-gray-100 flex items-center justify-center max-w-[240px] mx-auto">
                     {book.image ? (
                         <Image
                             src={book.image}
@@ -39,7 +39,7 @@ export default function BookDetailsPage({ params }: { params: Promise<{ id: stri
                         />
                     ) : (
                         <div className="text-center p-4">
-                            <h2 className="text-4xl font-bold text-gray-300 mb-2">{book.title.charAt(0)}</h2>
+                            <h2 className="text-4xl font-bold text-gray-300">{book.title.charAt(0)}</h2>
                             <p className="text-gray-400 text-sm">No Image</p>
                         </div>
                     )}

@@ -44,7 +44,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 w-full max-w-md bg-white border-t border-gray-100 h-20 flex items-center justify-around z-50 px-2 pb-2">
+    <div className="fixed bottom-0 w-full max-w-md bg-white border-t border-gray-100 h-24 flex items-center justify-around z-50 px-2 pb-2 rounded-t-4xl">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         const Icon = isActive ? item.iconFill : item.iconLine;
@@ -53,16 +53,14 @@ export default function BottomNav() {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex flex-col items-center justify-center w-full h-full transition-colors duration-200 group ${
-              isActive
-                ? "text-brand-red"
-                : "text-brand-gray hover:text-brand-black"
-            }`}
+            className={`flex flex-col items-center justify-center w-full h-full transition-colors duration-200 group ${isActive
+              ? "text-brand-red"
+              : "text-brand-gray hover:text-brand-black"
+              }`}
           >
             <div
-              className={`mb-1 transition-transform duration-200 ${
-                isActive ? "scale-110" : "group-hover:scale-105"
-              }`}
+              className={`mb-1 transition-transform duration-200 ${isActive ? "scale-110" : "group-hover:scale-105"
+                }`}
             >
               <Icon size={24} />
             </div>

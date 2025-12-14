@@ -36,7 +36,7 @@ export default function CategoryFilter({
                     onClick={() => onSelectCategory(cat)}
                     className={`flex-shrink-0 px-6 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap
             ${selectedCategory === cat
-                            ? "bg-brand-red text-white shadow-md shadow-brand-red/20"
+                            ? "bg-brand-red text-white"
                             : "bg-gray-100 text-brand-black hover:bg-gray-200"
                         }
           `}

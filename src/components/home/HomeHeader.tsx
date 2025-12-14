@@ -22,7 +22,7 @@ export default function HomeHeader({ user }: HomeHeaderProps) {
                 </button>
 
                 {/* User Avatar */}
-                <div className="relative w-10 h-10 rounded-full overflow-hidden border border-gray-100 shadow-sm">
+                <div className="relative w-10 h-10 rounded-full overflow-hidden">
                     {user?.avatar && user.avatar !== 'google' ? (
                         <Image
                             src={`/assets/avatar/${user.avatar}`}

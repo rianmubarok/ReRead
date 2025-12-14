@@ -11,7 +11,7 @@ interface OwnerInfoProps {
 
 export default function OwnerInfo({ owner }: OwnerInfoProps) {
     return (
-        <div className="flex items-center justify-between py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
                 {/* Avatar */}
                 <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 border border-gray-100">
