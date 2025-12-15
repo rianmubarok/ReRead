@@ -16,7 +16,7 @@ export default function ChatBookCard({ book }: ChatBookCardProps) {
   return (
     <div className="w-full bg-white rounded-3xl p-4 shadow-sm mb-6 flex gap-4 items-start">
       {/* Book Cover */}
-      <div className="relative rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+      <div className="relative w-24 aspect-[2/3] rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
         <img
           src={book.image || "/assets/books/placeholder.png"}
           alt={book.title}

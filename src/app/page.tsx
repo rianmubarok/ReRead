@@ -11,6 +11,7 @@ import SearchBar from "@/components/home/SearchBar";
 import CategoryFilter from "@/components/home/CategoryFilter";
 import BookSection from "@/components/home/BookSection";
 import { MOCK_BOOKS } from "@/data/mockBooks";
+import HomeWelcome from "@/components/home/HomeWelcome";
 
 export default function Home() {
   const { setVisible } = useNav();
@@ -120,13 +121,16 @@ export default function Home() {
     const useSimpleAnimation = !justLoggedIn;
 
     return (
-      <div
-        className={`min-h-screen bg-brand-white pb-24 overflow-hidden ${useComplexAnimation ? "animate-fade-in-up" : useSimpleAnimation ? "animate-fade-in" : ""
-          }`}
-      >
-        <div className="px-6">
+      <>
+        <HomeHeader user={user} />
+        <div
+          className={`min-h-screen bg-brand-white pb-24 overflow-x-hidden pt-24 ${useComplexAnimation ? "animate-fade-in-up" : useSimpleAnimation ? "animate-fade-in" : ""
+            }`}
+        >
+          <div className="px-6">
+
           <div className={useComplexAnimation ? "animate-slide-up" : ""}>
-            <HomeHeader user={user} />
+            <HomeWelcome user={user} />
           </div>
 
           <div
@@ -164,7 +168,8 @@ export default function Home() {
             />
           </div>
         </div>
-      </div>
+        </div>
+      </>
     );
   }
 

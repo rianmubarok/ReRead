@@ -8,6 +8,7 @@ import BookHeader from "@/components/book/BookHeader";
 import OwnerInfo from "@/components/book/OwnerInfo";
 import ActionButtons from "@/components/book/ActionButtons";
 import { useNav } from "@/context/NavContext";
+import HideOnScroll from "@/components/ui/HideOnScroll";
 
 export default function BookDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
@@ -26,7 +27,9 @@ export default function BookDetailsPage({ params }: { params: Promise<{ id: stri
     return (
         <div className="min-h-screen bg-brand-white pb-32 animate-fade-in">
             <div className="px-6 relative">
-                <BookHeader />
+                <HideOnScroll>
+                    <BookHeader />
+                </HideOnScroll>
 
                 {/* Book Cover */}
                 <div className="w-full aspect-[2/3] relative rounded-2xl overflow-hidden mb-6 bg-gray-100 flex items-center justify-center max-w-[240px] mx-auto">
