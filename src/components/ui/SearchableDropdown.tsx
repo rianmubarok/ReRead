@@ -93,7 +93,7 @@ export default function SearchableDropdown({
       {isOpen && (
         <div className="absolute z-[100] top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in-up origin-top">
           {/* Search Input */}
-          <div className="p-2 border-b border-gray-100">
+          <div className="p-2">
             <div className="relative">
               <RiSearchLine className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-gray" />
               <input

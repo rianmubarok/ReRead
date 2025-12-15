@@ -5,7 +5,7 @@ export interface User {
     location: string;
     isVerified: boolean;
     joinDate: string;
-    rating: number;
+
 }
 
 export const MOCK_USERS: User[] = [
@@ -16,7 +16,7 @@ export const MOCK_USERS: User[] = [
         location: "Panggang, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "Januari 2024",
-        rating: 4.8,
+
     },
     {
         id: "user2",
@@ -25,7 +25,7 @@ export const MOCK_USERS: User[] = [
         location: "Tahunan, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "Februari 2024",
-        rating: 4.5,
+
     },
     {
         id: "user3",
@@ -34,7 +34,7 @@ export const MOCK_USERS: User[] = [
         location: "Mlonggo, Jepara, Jawa Tengah",
         isVerified: false,
         joinDate: "Maret 2024",
-        rating: 4.0,
+
     },
     {
         id: "user4",
@@ -43,7 +43,7 @@ export const MOCK_USERS: User[] = [
         location: "Batealit, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "Maret 2024",
-        rating: 4.9,
+
     },
     {
         id: "user5",
@@ -52,7 +52,7 @@ export const MOCK_USERS: User[] = [
         location: "Mayong, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "April 2024",
-        rating: 4.7,
+
     },
     {
         id: "user6",
@@ -61,7 +61,7 @@ export const MOCK_USERS: User[] = [
         location: "Pecangaan, Jepara, Jawa Tengah",
         isVerified: false,
         joinDate: "Mei 2024",
-        rating: 4.2,
+
     },
     {
         id: "user7",
@@ -70,7 +70,7 @@ export const MOCK_USERS: User[] = [
         location: "Welahan, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "Juni 2024",
-        rating: 4.6,
+
     },
     {
         id: "user8",
@@ -79,7 +79,7 @@ export const MOCK_USERS: User[] = [
         location: "Keling, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "Juli 2024",
-        rating: 4.8,
+
     },
     {
         id: "user9",
@@ -88,7 +88,7 @@ export const MOCK_USERS: User[] = [
         location: "Kembang, Jepara, Jawa Tengah",
         isVerified: false,
         joinDate: "Agustus 2024",
-        rating: 4.3,
+
     },
     {
         id: "user10",
@@ -97,6 +97,6 @@ export const MOCK_USERS: User[] = [
         location: "Karimunjawa, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "September 2024",
-        rating: 4.7,
+
     },
 ];

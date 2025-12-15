@@ -17,11 +17,11 @@ export default function HomeHeader({ user }: HomeHeaderProps) {
 
     return (
         <>
-            <div className="fixed top-0 left-0 right-0 w-full max-w-md mx-auto bg-brand-white px-6 border-b border-gray-100 z-50">
+            <div className="fixed top-0 left-0 right-0 w-full max-w-md mx-auto bg-brand-white px-6 z-50">
                 <div className="flex flex-col pt-6 pb-6">
                     <div className="flex justify-between items-center">
                         {/* Hamburger Menu */}
-                        <button 
+                        <button
                             onClick={() => setIsDrawerOpen(true)}
                             className="p-2 -ml-2 text-brand-black hover:bg-gray-100 rounded-full transition-colors"
                         >
@@ -48,8 +48,8 @@ export default function HomeHeader({ user }: HomeHeaderProps) {
             </div>
 
             {/* Drawer */}
-            <HomeDrawer 
-                isOpen={isDrawerOpen} 
+            <HomeDrawer
+                isOpen={isDrawerOpen}
                 onClose={() => setIsDrawerOpen(false)}
                 user={user}
             />

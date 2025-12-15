@@ -37,6 +37,7 @@ export default function RootLayout({
     <html lang="en">
       <body
         className={`${dmSans.variable} antialiased`}
+        suppressHydrationWarning
       >
         <AuthProvider>
           <NavProvider>

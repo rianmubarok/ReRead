@@ -3,8 +3,9 @@
 import React from "react";
 import BottomContainer from "@/components/ui/BottomContainer";
 import Button from "@/components/ui/Button";
-
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
+import { RiPencilLine } from "@remixicon/react";
 
 interface ActionButtonsProps {
     bookId: string;
@@ -13,10 +14,33 @@ interface ActionButtonsProps {
 
 export default function ActionButtons({ bookId, ownerId }: ActionButtonsProps) {
     const router = useRouter();
+    const { user } = useAuth();
+
+    const isOwner = user?.id === ownerId;
 
     const handleSendMessage = () => {
         router.push(`/chat/${ownerId}?bookId=${bookId}`);
     };
+
+    const handleEditBook = () => {
+        router.push(`/my-books/edit/${bookId}`);
+    };
+
+    if (isOwner) {
+        return (
+            <BottomContainer className="gap-4">
+                <Button
+                    variant="primary"
+                    fullWidth
+                    className="flex-1 flex justify-center items-center gap-2" // Explicit flex centering
+                    onClick={handleEditBook}
+                >
+                    <RiPencilLine className="w-5 h-5" />
+                    <span>Edit Buku</span>
+                </Button>
+            </BottomContainer>
+        );
+    }
 
     return (
         <BottomContainer className="gap-4">

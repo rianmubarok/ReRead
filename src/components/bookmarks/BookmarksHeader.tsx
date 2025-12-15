@@ -5,7 +5,7 @@ import { RiSearchLine, RiMore2Fill } from "@remixicon/react";
 
 export default function BookmarksHeader() {
   return (
-    <div className="fixed top-0 left-0 right-0 w-full max-w-md mx-auto bg-brand-white px-6 border-b border-gray-100 z-50">
+    <div className="fixed top-0 left-0 right-0 w-full max-w-md mx-auto bg-brand-white px-6 z-50">
       <div className="flex items-center gap-4 py-6 pt-6">
         {/* Search Bar */}
         <div className="flex-1 relative">

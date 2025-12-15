@@ -4,12 +4,24 @@ import React from "react";
 import Image from "next/image";
 import { RiMore2Fill, RiMapPinLine } from "@remixicon/react";
 import { Book } from "@/data/mockBooks";
+import { useAuth } from "@/context/AuthContext";
 
 interface OwnerInfoProps {
     owner: Book['owner'];
 }
 
 export default function OwnerInfo({ owner }: OwnerInfoProps) {
+    const { user } = useAuth();
+
+    // Fallback logic: if this is the logged-in user, trust the auth context address first if available, 
+    // otherwise fallback to owner prop (which might be mock or stale).
+    // If it's another user, just use the owner prop.
+    const isMe = user?.id === owner.id;
+
+    const displayLocation = isMe && user?.address
+        ? `${user.address.district}, ${user.address.regency}`
+        : owner.location;
+
     return (
         <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -26,7 +38,7 @@ export default function OwnerInfo({ owner }: OwnerInfoProps) {
                     <h4 className="font-bold text-brand-black text-sm">{owner.name}</h4>
                     <div className="flex items-center gap-1 text-xs text-brand-gray">
                         <RiMapPinLine className="w-3 h-3" />
-                        <span className="truncate max-w-[200px]">{owner.location}</span>
+                        <span className="truncate max-w-[200px]">{displayLocation}</span>
                     </div>
                 </div>
             </div>

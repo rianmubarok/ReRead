@@ -111,7 +111,7 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
       label: "Buku Saya",
       onClick: () => {
         onClose();
-        // TODO: Navigate to my books page
+        router.push("/my-books");
       },
     },
     {
@@ -165,7 +165,7 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
         >
           <div className="flex flex-col h-full">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between p-6">
               <h2 className="text-lg font-bold text-brand-black">Menu</h2>
               <button
                 onClick={onClose}

@@ -69,11 +69,16 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
       // Final Step (Location) -> Submit
       setIsLoading(true);
       try {
+        const provinceName = addressData.provinces.find(p => p.code === selectedProvince)?.name || selectedProvince;
+        const regencyName = addressData.regencies.find(r => r.code === selectedRegency)?.name || selectedRegency;
+        const districtName = addressData.districts.find(d => d.code === selectedDistrict)?.name || selectedDistrict;
+        const villageName = addressData.villages.find(v => v.code === selectedVillage)?.name || selectedVillage;
+
         await login(name, selectedAvatar, {
-          province: selectedProvince,
-          regency: selectedRegency,
-          district: selectedDistrict,
-          village: selectedVillage,
+          province: provinceName,
+          regency: regencyName,
+          district: districtName,
+          village: villageName,
         });
         onFinish();
       } catch (error) {
