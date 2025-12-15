@@ -155,6 +155,7 @@ export default function Home() {
                 title="Terdekat"
                 books={category === "Semua" ? MOCK_BOOKS.slice(0, 8) : MOCK_BOOKS.filter(b => b.category === category)}
                 variant="nearby"
+                href="/books/nearby"
               />
             </div>
 
@@ -167,6 +168,7 @@ export default function Home() {
                   ? MOCK_BOOKS.slice(0, 6)
                   : MOCK_BOOKS.filter(b => b.category === category).slice(0, 6)}
                 variant="trending"
+                href="/books/recent"
               />
             </div>
 
@@ -179,7 +181,7 @@ export default function Home() {
                   (!b.price || b.price === 0) &&
                   (category === "Semua" || b.category === category)
                 )}
-                variant="nearby"
+                href="/books/free"
               />
             </div>
           </div>
