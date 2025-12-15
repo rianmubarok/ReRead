@@ -51,7 +51,7 @@ export default function Step2Avatar({
           className={`aspect-square rounded-full flex items-center justify-center relative overflow-hidden transition-all border-2
             ${selectedAvatar === "google"
               ? "border-brand-red scale-105"
-              : ""
+              : "border-brand-gray"
             }
           `}
         >
@@ -66,7 +66,7 @@ export default function Step2Avatar({
             className={`aspect-square rounded-full relative overflow-hidden transition-all border-2
               ${selectedAvatar === fileName
                 ? "border-brand-red scale-105"
-                : ""
+                : "border-brand-gray"
               }
             `}
           >
