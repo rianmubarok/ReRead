@@ -43,6 +43,13 @@ export interface ChatMessage {
   timestamp: Date;
   bookId?: string; // Optional: if message is related to a book
   isRead?: boolean; // Optional: for read status
+  messageType?: "text" | "exchange_request" | "exchange_completed";
+  exchangeRequest?: {
+    bookId: string;
+    bookTitle: string;
+    bookImage: string;
+    status: "pending" | "completed" | "cancelled";
+  };
 }
 
 /**
@@ -74,6 +81,13 @@ export interface LegacyMessage {
   text: string;
   timestamp: string;
   isRead: boolean;
+  messageType?: "text" | "exchange_request" | "exchange_completed";
+  exchangeRequest?: {
+    bookId: string;
+    bookTitle: string;
+    bookImage: string;
+    status: "pending" | "completed" | "cancelled";
+  };
 }
 
 export interface LegacyChatThread {

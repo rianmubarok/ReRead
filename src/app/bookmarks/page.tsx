@@ -5,6 +5,7 @@ import BookCard from "@/components/home/BookCard";
 import { MOCK_BOOKS } from "@/data/mockBooks";
 import { RiBookmarkFill } from "@remixicon/react";
 import BookmarksHeader from "@/components/bookmarks/BookmarksHeader";
+import toast from "react-hot-toast";
 
 export default function BookmarksPage() {
     const [searchQuery, setSearchQuery] = useState("");
@@ -12,6 +13,7 @@ export default function BookmarksPage() {
 
     const handleRemoveBookmark = (id: string) => {
         setBookmarks((prev) => prev.filter((b) => b.id !== id));
+        toast.success("Buku dihapus dari simpanan");
     };
 
     // Filter based on search

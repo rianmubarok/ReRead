@@ -56,12 +56,8 @@ export default function ChatDetailPage() {
                     status: "Aktif"
                 });
 
-                // FORCE UPDATE/RESET for Dev/Demo:
-                // If this is chat1 (Nadia), force clear store to pick up new mock changes
-                // regarding unread messages.
                 if (chatId === "chat1") {
-                    chatStore.clearMessages(chatId);
-                    setMessages([]); // Clear local state to trigger full reload logic below
+                    // Removed debug clearing logic that was causing data loss
                 }
             }
 
@@ -70,10 +66,7 @@ export default function ChatDetailPage() {
                 const foundBook = MOCK_BOOKS.find(b => b.id === bookId);
                 if (foundBook) {
                     setBook(foundBook);
-                    // Only show BookContextPanel for NEW chats (not existing ones)
-                    // Existing chats already have book context in the first message (ChatBookCard)
                     setShowBookContext(!existingChat);
-                    // If we didn't find an existing chat, set the user from the book owner
                     if (!existingChat) {
                         setUser({
                             name: foundBook.owner.name,
@@ -83,7 +76,6 @@ export default function ChatDetailPage() {
                     }
                 }
             } else if (!existingChat) {
-                // Fallback for demo if id is just a generic user id and no book context
                 setUser({
                     name: "Nadia Putri",
                     avatar: "google",
@@ -94,24 +86,24 @@ export default function ChatDetailPage() {
             // 3. Load messages from chat service/store
             try {
                 const loadedMessages = await chatService.getMessages(chatId);
+                let finalMessages = [...loadedMessages];
 
-                // If no messages exist but there's a last message in the chat, add it to store
-                if (loadedMessages.length === 0 && existingChat) {
-                    let initialMessages: ChatMessage[] = [];
+                // If we have an existing chat (mock), ensure its history is present
+                if (existingChat) {
+                    const storeIds = new Set(loadedMessages.map(m => m.id));
+                    let mockMessages: ChatMessage[] = [];
 
                     if (existingChat.messages && existingChat.messages.length > 0) {
-                        // Convert legacy messages to new format
-                        initialMessages = existingChat.messages.map((m, index) => ({
+                        mockMessages = existingChat.messages.map((m, index) => ({
                             id: m.id,
                             text: m.text,
                             senderId: m.senderId === "me" ? (currentUser?.id || "me") : existingChat.user.id,
                             timestamp: parseMockDate(m.timestamp),
-                            // Only attach book context to the very first message of the conversation
                             bookId: index === 0 ? existingChat.bookContext?.id : undefined,
                             isRead: m.isRead,
                         }));
                     } else if (existingChat.lastMessage) {
-                        initialMessages = [{
+                        mockMessages = [{
                             id: `init-${Date.now()}`,
                             text: existingChat.lastMessage,
                             senderId: existingChat.user.id,
@@ -120,12 +112,22 @@ export default function ChatDetailPage() {
                         }];
                     }
 
-                    // Add all to store
-                    initialMessages.forEach(msg => chatStore.addMessage(chatId, msg));
-                    setMessages(initialMessages);
-                } else {
-                    setMessages(loadedMessages);
+                    // Identify missing mock messages
+                    const missingMocks = mockMessages.filter(m => !storeIds.has(m.id));
+
+                    if (missingMocks.length > 0) {
+                        // We have missing history. We need to merge and re-populate the store to maintain order.
+                        // Order: Mock History -> Loaded Messages (new ones)
+                        // Note: timestamps should assume order, but let's be explicit
+                        finalMessages = [...missingMocks, ...loadedMessages].sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+                        // Update store with complete history
+                        chatStore.clearMessages(chatId);
+                        finalMessages.forEach(msg => chatStore.addMessage(chatId, msg));
+                    }
                 }
+
+                setMessages(finalMessages);
             } catch (error) {
                 console.error("Error loading messages:", error);
             } finally {
@@ -143,22 +145,18 @@ export default function ChatDetailPage() {
         if (!chatId) return;
 
         const storeMessages = chatStore.getMessages(chatId);
-        // Always sync with store to avoid duplicates
-        // Deduplicate by ID and sort by timestamp
         const uniqueMessages = Array.from(
             new Map(storeMessages.map(msg => [msg.id, msg])).values()
         ).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
 
-        // Only update if messages actually changed to avoid unnecessary re-renders
         setMessages(prev => {
             const prevIds = new Set(prev.map(m => m.id));
             const newIds = new Set(uniqueMessages.map(m => m.id));
 
-            // Check if messages actually changed
             if (prev.length === uniqueMessages.length &&
                 prev.every(m => newIds.has(m.id)) &&
                 uniqueMessages.every(m => prevIds.has(m.id))) {
-                return prev; // No change, return previous to avoid re-render
+                return prev;
             }
 
             return uniqueMessages;
@@ -170,16 +168,40 @@ export default function ChatDetailPage() {
         if (!text.trim() || !chatId || !currentUser?.id) return;
 
         try {
-            // Send message with bookId if book context exists
-            // The message will be added to store by chatService, and useEffect will update local state
             await chatService.sendMessage(
                 chatId,
                 text,
-                currentUser.id, // Pass current user ID
+                currentUser.id,
                 showBookContext ? book?.id : undefined
             );
         } catch (error) {
             console.error("Error sending message:", error);
+        }
+    };
+
+    const handleConfirmExchange = (action: string, messageId: string) => {
+        if (action === 'confirm_exchange' || action === 'cancel_exchange') {
+            const msg = messages.find(m => m.id === messageId);
+            if (msg && msg.exchangeRequest) {
+                const newStatus = action === 'confirm_exchange' ? 'completed' : 'cancelled';
+
+                const updatedMsg = {
+                    ...msg,
+                    exchangeRequest: {
+                        ...msg.exchangeRequest,
+                        status: newStatus as "completed" | "cancelled" | "pending"
+                    }
+                };
+
+                setMessages(prev => prev.map(m => m.id === messageId ? updatedMsg : m));
+
+                if (action === 'confirm_exchange') {
+                    handleSendMessage(`Pertukaran "${msg.exchangeRequest?.bookTitle}" telah selesai! 🎉`);
+                } else {
+                    // Optional: maybe send a system message saying it was cancelled? 
+                    // For now just update status is enough.
+                }
+            }
         }
     };
 
@@ -206,6 +228,10 @@ export default function ChatDetailPage() {
                 name={user.name}
                 status={user.status}
                 avatar={user.avatar}
+                hasPendingExchange={messages.some(m =>
+                    m.messageType === 'exchange_request' &&
+                    m.exchangeRequest?.status === 'pending'
+                )}
             />
 
             {/* Messages Area */}
@@ -237,6 +263,7 @@ export default function ChatDetailPage() {
                                             message={msg}
                                             user={user}
                                             currentUserId={currentUser?.id || "me"}
+                                            onAction={handleConfirmExchange}
                                         />
                                     </React.Fragment>
                                 );

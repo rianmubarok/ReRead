@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { RiArrowLeftLine, RiBookmarkLine, RiBookmarkFill } from "@remixicon/react";
+import toast from "react-hot-toast";
 
 interface BookHeaderProps {
     isOwner?: boolean;
@@ -11,6 +12,16 @@ interface BookHeaderProps {
 export default function BookHeader({ isOwner }: BookHeaderProps) {
     const router = useRouter();
     const [isBookmarked, setIsBookmarked] = useState(false);
+
+    const handleToggleBookmark = () => {
+        const newState = !isBookmarked;
+        setIsBookmarked(newState);
+        if (newState) {
+            toast.success("Buku berhasil disimpan");
+        } else {
+            toast.success("Buku dihapus dari simpanan");
+        }
+    };
 
     return (
         <div className="flex justify-between items-center py-4 pt-6 bg-brand-white">
@@ -23,7 +34,7 @@ export default function BookHeader({ isOwner }: BookHeaderProps) {
 
             {!isOwner && (
                 <button
-                    onClick={() => setIsBookmarked(!isBookmarked)}
+                    onClick={handleToggleBookmark}
                     className={`p-2 -mr-2 rounded-full transition-colors ${isBookmarked ? 'text-brand-red' : 'text-brand-red hover:bg-red-50'}`}
                 >
                     {isBookmarked ? (

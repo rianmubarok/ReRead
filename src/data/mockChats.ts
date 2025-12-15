@@ -113,6 +113,20 @@ export const MOCK_CHATS: LegacyChatThread[] = [
                 timestamp: "09:40",
                 isRead: true,
             },
+            {
+                id: "m5",
+                senderId: "user2",
+                text: "Oke kalau gitu saya ajukan selesai ya kak.",
+                timestamp: "09:42",
+                isRead: true,
+                messageType: "exchange_request",
+                exchangeRequest: {
+                    bookId: "2",
+                    bookTitle: "Makanya, Mikir!",
+                    bookImage: "",
+                    status: "pending"
+                }
+            }
         ],
     },
     {

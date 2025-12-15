@@ -11,6 +11,7 @@ import {
   RiMapPinLine,
   RiMapLine,
   RiRefreshLine,
+  RiHistoryLine,
 } from "@remixicon/react";
 import { User } from "@/types/user";
 import dynamic from "next/dynamic";
@@ -130,6 +131,14 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
       onClick: () => {
         onClose();
         router.push("/my-books");
+      },
+    },
+    {
+      icon: RiHistoryLine,
+      label: "Riwayat Pertukaran",
+      onClick: () => {
+        onClose();
+        router.push("/stats");
       },
     },
   ];
