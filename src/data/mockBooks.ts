@@ -13,6 +13,7 @@ export interface Book {
     condition: "Baru" | "Baik" | "Bekas";
     owner: User;
     price?: number; // Optional price for selling
+    exchangeMethods?: string[];
     createdAt: string;
 }
 
@@ -37,6 +38,7 @@ export const MOCK_BOOKS: Book[] = [
         condition: "Baik",
         owner: MOCK_USERS[0], // user1
         price: 150000,
+        exchangeMethods: ["Nego", "Barter"],
         createdAt: "2 jam yang lalu",
     },
     {

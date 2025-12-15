@@ -162,11 +162,24 @@ export default function Home() {
               className={useComplexAnimation ? "animate-slide-up animate-delay-400" : ""}
             >
               <BookSection
-                title="Trending"
+                title="Baru Ditambahkan"
                 books={category === "Semua"
-                  ? MOCK_BOOKS.filter(b => b.isTrending)
-                  : MOCK_BOOKS.filter(b => b.category === category && b.isTrending)}
+                  ? MOCK_BOOKS.slice(0, 6)
+                  : MOCK_BOOKS.filter(b => b.category === category).slice(0, 6)}
                 variant="trending"
+              />
+            </div>
+
+            <div
+              className={useComplexAnimation ? "animate-slide-up animate-delay-500" : ""}
+            >
+              <BookSection
+                title="Siap Dipinjam / Gratis"
+                books={MOCK_BOOKS.filter(b =>
+                  (!b.price || b.price === 0) &&
+                  (category === "Semua" || b.category === category)
+                )}
+                variant="nearby"
               />
             </div>
           </div>

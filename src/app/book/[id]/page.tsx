@@ -60,6 +60,13 @@ export default function BookDetailsPage({ params }: { params: Promise<{ id: stri
                 {/* Condition & Description */}
                 <div className="py-6 space-y-4">
                     <div className="flex items-center gap-2">
+                        <span className="font-bold text-brand-black text-sm">Kategori :</span>
+                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-brand-black">
+                            {book.category}
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
                         <span className="font-bold text-brand-black text-sm">Kondisi Buku :</span>
                         <span className={`px-3 py-1 rounded-full text-xs font-medium 
                  ${book.condition === 'Baru' ? 'bg-green-100 text-green-700' :
@@ -70,6 +77,21 @@ export default function BookDetailsPage({ params }: { params: Promise<{ id: stri
                             {book.condition}
                         </span>
                     </div>
+
+                    {book.exchangeMethods && book.exchangeMethods.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            <span className="font-bold text-brand-black text-sm">Metode :</span>
+                            <div className="flex flex-wrap gap-1">
+                                {book.exchangeMethods.map((method) => (
+                                    <span key={method} className="px-3 py-1 rounded-full text-xs font-medium bg-brand-black text-brand-white">
+                                        {method}
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+
 
                     <div className="text-sm text-brand-gray leading-relaxed whitespace-pre-line">
                         {book.description}

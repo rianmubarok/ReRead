@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { RiArrowLeftLine, RiImageAddLine } from "@remixicon/react";
 import { useAuth } from "@/context/AuthContext";
-// We import MOCK_BOOKS to push to it (simulation)
 import { MOCK_BOOKS, Book } from "@/data/mockBooks";
 
 export default function AddBookPage() {
@@ -18,19 +17,38 @@ export default function AddBookPage() {
         category: "Non-Fiksi",
         condition: "Baik",
         description: "",
+        exchangeMethods: [] as string[],
     });
 
     const categories = ["Fiksi", "Non-Fiksi", "Pendidikan", "Komik", "Sastra"];
     const conditions = ["Baru", "Baik", "Bekas"];
+    const exchangeOptions = ["Gratis / Dipinjamkan", "Nego", "Barter"];
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const toggleExchangeMethod = (method: string) => {
+        setFormData(prev => {
+            const current = prev.exchangeMethods;
+            if (current.includes(method)) {
+                return { ...prev, exchangeMethods: current.filter(m => m !== method) };
+            } else {
+                return { ...prev, exchangeMethods: [...current, method] };
+            }
+        });
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
+
+        if (formData.exchangeMethods.length === 0) {
+            alert("Pilih minimal satu metode pertukaran");
+            setIsLoading(false);
+            return;
+        }
 
         // Simulate API delay
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -54,6 +72,7 @@ export default function AddBookPage() {
                     isVerified: true,
                     joinDate: "2024",
                 },
+                exchangeMethods: formData.exchangeMethods,
                 createdAt: "Baru saja",
                 location: user.address
                     ? `${user.address.district}, ${user.address.regency}`
@@ -157,6 +176,31 @@ export default function AddBookPage() {
                                 ))}
                             </select>
                         </div>
+                    </div>
+
+                    {/* Exchange Methods */}
+                    <div className="space-y-3">
+                        <label className="text-sm font-bold text-brand-black">Metode Pertukaran</label>
+                        <div className="flex flex-wrap gap-2">
+                            {exchangeOptions.map((method) => {
+                                const isSelected = formData.exchangeMethods.includes(method);
+                                return (
+                                    <button
+                                        key={method}
+                                        type="button"
+                                        onClick={() => toggleExchangeMethod(method)}
+                                        className={`px-4 py-2 rounded-full text-sm font-medium border transition-all
+                                            ${isSelected
+                                                ? "bg-brand-black text-white border-brand-black"
+                                                : "bg-white text-brand-gray border-gray-200 hover:border-brand-black"
+                                            }`}
+                                    >
+                                        {method}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <p className="text-xs text-brand-gray">Pilih satu atau lebih.</p>
                     </div>
 
                     {/* Description */}
