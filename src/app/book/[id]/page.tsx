@@ -10,10 +10,15 @@ import ActionButtons from "@/components/book/ActionButtons";
 import { useNav } from "@/context/NavContext";
 import HideOnScroll from "@/components/ui/HideOnScroll";
 
+import { useAuth } from "@/context/AuthContext";
+
 export default function BookDetailsPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const { setVisible } = useNav();
+    const { user } = useAuth();
     const book = MOCK_BOOKS.find((b) => b.id === id);
+
+    const isOwner = user?.id === book?.owner.id;
 
     useEffect(() => {
         setVisible(false);
@@ -28,7 +33,7 @@ export default function BookDetailsPage({ params }: { params: Promise<{ id: stri
         <div className="min-h-screen bg-brand-white pb-32 animate-fade-in">
             <div className="px-6 relative">
                 <HideOnScroll>
-                    <BookHeader />
+                    <BookHeader isOwner={isOwner} />
                 </HideOnScroll>
 
                 {/* Book Cover */}

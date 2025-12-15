@@ -12,6 +12,7 @@ import CategoryFilter from "@/components/home/CategoryFilter";
 import BookSection from "@/components/home/BookSection";
 import { MOCK_BOOKS } from "@/data/mockBooks";
 import HomeWelcome from "@/components/home/HomeWelcome";
+import { haversineDistance } from "@/utils/distance";
 
 export default function Home() {
   const { setVisible } = useNav();
@@ -155,6 +156,11 @@ export default function Home() {
                 title="Terdekat"
                 books={(category === "Semua" ? MOCK_BOOKS : MOCK_BOOKS.filter(b => b.category === category))
                   .filter(b => b.owner.id !== user?.id)
+                  .sort((a, b) => {
+                    const distA = haversineDistance(user?.coordinates, a.owner.coordinates) ?? Infinity;
+                    const distB = haversineDistance(user?.coordinates, b.owner.coordinates) ?? Infinity;
+                    return distA - distB;
+                  })
                   .slice(0, 8)}
                 variant="nearby"
                 href="/books/nearby"

@@ -8,9 +8,14 @@ import BookmarksHeader from "@/components/bookmarks/BookmarksHeader";
 
 export default function BookmarksPage() {
     const [searchQuery, setSearchQuery] = useState("");
+    const [bookmarks, setBookmarks] = useState(MOCK_BOOKS.slice(0, 6));
 
-    // Simulating bookmarked items (just taking a slice of mock data)
-    const bookmarkedBooks = MOCK_BOOKS.slice(0, 6).filter(book =>
+    const handleRemoveBookmark = (id: string) => {
+        setBookmarks((prev) => prev.filter((b) => b.id !== id));
+    };
+
+    // Filter based on search
+    const filteredBooks = bookmarks.filter(book =>
         book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         book.author.toLowerCase().includes(searchQuery.toLowerCase())
     );
@@ -23,13 +28,29 @@ export default function BookmarksPage() {
 
                     {/* Grid */}
                     <div className="grid grid-cols-2 gap-4">
-                        {bookmarkedBooks.map((book) => (
-                            <BookCard key={book.id} book={book} fullWidth />
+                        {filteredBooks.map((book) => (
+                            <BookCard
+                                key={book.id}
+                                book={book}
+                                fullWidth
+                                actionOverlay={
+                                    <button
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            handleRemoveBookmark(book.id);
+                                        }}
+                                        className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm text-brand-red hover:bg-gray-100 transition-colors"
+                                    >
+                                        <RiBookmarkFill className="w-5 h-5" />
+                                    </button>
+                                }
+                            />
                         ))}
                     </div>
 
                     {/* Empty State (Hidden if has items) */}
-                    {bookmarkedBooks.length === 0 && (
+                    {filteredBooks.length === 0 && (
                         <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
                             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center text-brand-gray">
                                 <RiBookmarkFill className="w-8 h-8" />

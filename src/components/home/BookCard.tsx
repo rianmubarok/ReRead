@@ -13,9 +13,10 @@ interface BookCardProps {
     variant?: "nearby" | "trending";
     className?: string;
     fullWidth?: boolean;
+    actionOverlay?: React.ReactNode;
 }
 
-export default function BookCard({ book, variant = "nearby", className, fullWidth = false }: BookCardProps) {
+export default function BookCard({ book, variant = "nearby", className, fullWidth = false, actionOverlay }: BookCardProps) {
     const { user } = useAuth();
 
     // Calculate dynamic distance if coordinates available
@@ -43,20 +44,36 @@ export default function BookCard({ book, variant = "nearby", className, fullWidt
             className={`flex-shrink-0 flex flex-col gap-3 group cursor-pointer active:scale-95 transition-transform ${fullWidth ? "w-full" : "w-36"} ${className || ""}`}
         >
             {/* Cover Image */}
-            <div className="relative rounded-xl overflow-hidden aspect-[2/3] bg-gray-200 flex items-center justify-center">
-                {book.image ? (
-                    <Image
-                        src={book.image}
-                        alt={book.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        sizes="(max-width: 768px) 150px, 200px"
-                    />
-                ) : (
-                    <div className="p-2 text-center">
-                        <span className="text-2xl font-bold text-gray-400 block mb-1">
-                            {book.title.charAt(0)}
-                        </span>
+            {/* Cover Image */}
+            <div className="relative aspect-[2/3]">
+                <div className="absolute inset-0 rounded-xl overflow-hidden bg-gray-200 flex items-center justify-center">
+                    {book.image ? (
+                        <Image
+                            src={book.image}
+                            alt={book.title}
+                            fill
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            sizes="(max-width: 768px) 150px, 200px"
+                        />
+                    ) : (
+                        <div className="p-2 text-center">
+                            <span className="text-2xl font-bold text-gray-400 block mb-1">
+                                {book.title.charAt(0)}
+                            </span>
+                        </div>
+                    )}
+                </div>
+
+                {/* Action Overlay */}
+                {actionOverlay && (
+                    <div
+                        className="absolute top-2 right-2 z-10"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        }}
+                    >
+                        {actionOverlay}
                     </div>
                 )}
             </div>

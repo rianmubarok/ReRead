@@ -13,7 +13,7 @@ export default function CategoryFilter({
     onSelectCategory,
 }: CategoryFilterProps) {
     const { ref, events, isDragging } = useDraggableScroll();
-    const categories = ["Semua", "Fiksi", "Non-Fiksi", "Pendidikan", "Komik", "Sastra"];
+    const categories = ["Semua", "Fiksi", "Non-Fiksi", "Pendidikan", "Komik", "Sastra", "Biografi", "Teknologi", "Seni", "Agama", "Hobi"];
 
     // Ensure scroll starts from left (scrollLeft = 0) on mount
     useEffect(() => {

@@ -4,7 +4,11 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { RiArrowLeftLine, RiBookmarkLine, RiBookmarkFill } from "@remixicon/react";
 
-export default function BookHeader() {
+interface BookHeaderProps {
+    isOwner?: boolean;
+}
+
+export default function BookHeader({ isOwner }: BookHeaderProps) {
     const router = useRouter();
     const [isBookmarked, setIsBookmarked] = useState(false);
 
@@ -17,16 +21,18 @@ export default function BookHeader() {
                 <RiArrowLeftLine className="w-6 h-6" />
             </button>
 
-            <button
-                onClick={() => setIsBookmarked(!isBookmarked)}
-                className={`p-2 -mr-2 rounded-full transition-colors ${isBookmarked ? 'text-brand-red' : 'text-brand-red hover:bg-red-50'}`}
-            >
-                {isBookmarked ? (
-                    <RiBookmarkFill className="w-6 h-6" />
-                ) : (
-                    <RiBookmarkLine className="w-6 h-6" />
-                )}
-            </button>
+            {!isOwner && (
+                <button
+                    onClick={() => setIsBookmarked(!isBookmarked)}
+                    className={`p-2 -mr-2 rounded-full transition-colors ${isBookmarked ? 'text-brand-red' : 'text-brand-red hover:bg-red-50'}`}
+                >
+                    {isBookmarked ? (
+                        <RiBookmarkFill className="w-6 h-6" />
+                    ) : (
+                        <RiBookmarkLine className="w-6 h-6" />
+                    )}
+                </button>
+            )}
         </div>
     );
 }
