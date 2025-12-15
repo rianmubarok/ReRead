@@ -2,10 +2,20 @@ export interface User {
     id: string;
     name: string;
     avatar: string;
-    location: string;
+    location: string; // Formatting: "District, Regency, Province"
     isVerified: boolean;
     joinDate: string;
-
+    address?: {
+        province: string;
+        regency: string;
+        district: string;
+        village?: string;
+    };
+    coordinates?: {
+        lat: number;
+        lng: number;
+    };
+    bio?: string;
 }
 
 export const MOCK_USERS: User[] = [
@@ -16,7 +26,13 @@ export const MOCK_USERS: User[] = [
         location: "Panggang, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "Januari 2024",
-
+        address: {
+            district: "Panggang",
+            regency: "Jepara",
+            province: "Jawa Tengah"
+        },
+        coordinates: { lat: -6.5900, lng: 110.6700 },
+        bio: "Pecinta sejati buku fiksi, sejarah, dan novel klasik. Suka berdiskusi tentang buku sambil minum kopi.",
     },
     {
         id: "user2",
@@ -25,7 +41,12 @@ export const MOCK_USERS: User[] = [
         location: "Tahunan, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "Februari 2024",
-
+        address: {
+            district: "Tahunan",
+            regency: "Jepara",
+            province: "Jawa Tengah"
+        },
+        coordinates: { lat: -6.6200, lng: 110.6800 }
     },
     {
         id: "user3",
@@ -34,7 +55,12 @@ export const MOCK_USERS: User[] = [
         location: "Mlonggo, Jepara, Jawa Tengah",
         isVerified: false,
         joinDate: "Maret 2024",
-
+        address: {
+            district: "Mlonggo",
+            regency: "Jepara",
+            province: "Jawa Tengah"
+        },
+        coordinates: { lat: -6.5300, lng: 110.7000 }
     },
     {
         id: "user4",
@@ -43,7 +69,12 @@ export const MOCK_USERS: User[] = [
         location: "Batealit, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "Maret 2024",
-
+        address: {
+            district: "Batealit",
+            regency: "Jepara",
+            province: "Jawa Tengah"
+        },
+        coordinates: { lat: -6.6300, lng: 110.7200 }
     },
     {
         id: "user5",
@@ -52,7 +83,12 @@ export const MOCK_USERS: User[] = [
         location: "Mayong, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "April 2024",
-
+        address: {
+            district: "Mayong",
+            regency: "Jepara",
+            province: "Jawa Tengah"
+        },
+        coordinates: { lat: -6.7400, lng: 110.7500 }
     },
     {
         id: "user6",
@@ -61,7 +97,12 @@ export const MOCK_USERS: User[] = [
         location: "Pecangaan, Jepara, Jawa Tengah",
         isVerified: false,
         joinDate: "Mei 2024",
-
+        address: {
+            district: "Pecangaan",
+            regency: "Jepara",
+            province: "Jawa Tengah"
+        },
+        coordinates: { lat: -6.7000, lng: 110.7000 }
     },
     {
         id: "user7",
@@ -70,7 +111,12 @@ export const MOCK_USERS: User[] = [
         location: "Welahan, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "Juni 2024",
-
+        address: {
+            district: "Welahan",
+            regency: "Jepara",
+            province: "Jawa Tengah"
+        },
+        coordinates: { lat: -6.7700, lng: 110.6500 }
     },
     {
         id: "user8",
@@ -79,7 +125,12 @@ export const MOCK_USERS: User[] = [
         location: "Keling, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "Juli 2024",
-
+        address: {
+            district: "Keling",
+            regency: "Jepara",
+            province: "Jawa Tengah"
+        },
+        coordinates: { lat: -6.4600, lng: 110.8500 }
     },
     {
         id: "user9",
@@ -88,7 +139,12 @@ export const MOCK_USERS: User[] = [
         location: "Kembang, Jepara, Jawa Tengah",
         isVerified: false,
         joinDate: "Agustus 2024",
-
+        address: {
+            district: "Kembang",
+            regency: "Jepara",
+            province: "Jawa Tengah"
+        },
+        coordinates: { lat: -6.5000, lng: 110.8000 }
     },
     {
         id: "user10",
@@ -97,6 +153,11 @@ export const MOCK_USERS: User[] = [
         location: "Karimunjawa, Jepara, Jawa Tengah",
         isVerified: true,
         joinDate: "September 2024",
-
+        address: {
+            district: "Karimunjawa",
+            regency: "Jepara",
+            province: "Jawa Tengah"
+        },
+        coordinates: { lat: -5.8500, lng: 110.4300 }
     },
 ];

@@ -153,7 +153,7 @@ export default function Home() {
             >
               <BookSection
                 title="Terdekat"
-                books={category === "Semua" ? MOCK_BOOKS.slice(0, 8) : MOCK_BOOKS.filter(b => b.category === category)}
+                books={category === "Semua" ? MOCK_BOOKS.slice(0, 8) : MOCK_BOOKS.filter(b => b.category === category).slice(0, 8)}
                 variant="nearby"
                 href="/books/nearby"
               />
@@ -165,8 +165,8 @@ export default function Home() {
               <BookSection
                 title="Baru Ditambahkan"
                 books={category === "Semua"
-                  ? MOCK_BOOKS.slice(0, 6)
-                  : MOCK_BOOKS.filter(b => b.category === category).slice(0, 6)}
+                  ? MOCK_BOOKS.slice(0, 8)
+                  : MOCK_BOOKS.filter(b => b.category === category).slice(0, 8)}
                 variant="trending"
                 href="/books/recent"
               />
@@ -180,7 +180,7 @@ export default function Home() {
                 books={MOCK_BOOKS.filter(b =>
                   (!b.price || b.price === 0) &&
                   (category === "Semua" || b.category === category)
-                )}
+                ).slice(0, 8)}
                 href="/books/free"
               />
             </div>

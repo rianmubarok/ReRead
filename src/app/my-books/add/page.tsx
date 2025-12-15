@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { RiArrowLeftLine, RiImageAddLine } from "@remixicon/react";
 import { useAuth } from "@/context/AuthContext";
 import { MOCK_BOOKS, Book } from "@/data/mockBooks";
+import toast from "react-hot-toast";
 
 export default function AddBookPage() {
     const router = useRouter();
@@ -44,8 +45,23 @@ export default function AddBookPage() {
         e.preventDefault();
         setIsLoading(true);
 
+        const { title, author, description, exchangeMethods } = formData;
+
+        // Manual validation replaced native 'required'
+        if (!title || !author || !description) {
+            toast.error("Mohon lengkapi semua data buku.", {
+                duration: 3000,
+                icon: "⚠️",
+            });
+            setIsLoading(false);
+            return;
+        }
+
         if (formData.exchangeMethods.length === 0) {
-            alert("Pilih minimal satu metode pertukaran");
+            toast.error("Pilih minimal satu metode pertukaran", {
+                duration: 3000,
+                icon: "⚠️",
+            });
             setIsLoading(false);
             return;
         }
@@ -84,10 +100,12 @@ export default function AddBookPage() {
             // Note: This will reset on page reload/recompile
             MOCK_BOOKS.unshift(newBook);
 
+            toast.success("Buku berhasil ditambahkan!");
+
             // Navigate back replacing current history entry so "back" doesn't return to form
             router.replace("/my-books");
         } else {
-            alert("Silakan login terlebih dahulu");
+            toast.error("Silakan login terlebih dahulu");
             setIsLoading(false);
         }
     };
@@ -110,7 +128,7 @@ export default function AddBookPage() {
             </div>
 
             <div className="pt-24 px-6 max-w-md mx-auto">
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6" noValidate>
 
                     {/* Image Placeholder */}
                     <div className="w-full aspect-[3/4] max-h-64 bg-gray-100 rounded-xl flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer">
@@ -124,7 +142,6 @@ export default function AddBookPage() {
                         <input
                             type="text"
                             name="title"
-                            required
                             placeholder="Contoh: Laut Bercerita"
                             value={formData.title}
                             onChange={handleChange}
@@ -138,7 +155,6 @@ export default function AddBookPage() {
                         <input
                             type="text"
                             name="author"
-                            required
                             placeholder="Nama penulis"
                             value={formData.author}
                             onChange={handleChange}
@@ -208,7 +224,6 @@ export default function AddBookPage() {
                         <label className="text-sm font-bold text-brand-black">Deskripsi</label>
                         <textarea
                             name="description"
-                            required
                             rows={4}
                             placeholder="Ceritakan sedikit tentang buku ini..."
                             value={formData.description}

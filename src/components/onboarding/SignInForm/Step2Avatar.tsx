@@ -25,7 +25,7 @@ export default function Step2Avatar({
 
       {/* Avatar Preview */}
       <div className="flex justify-center">
-        <div className="w-40 h-40 bg-[#FBEF86] rounded-full flex items-center justify-center relative overflow-hidden transition-all duration-300">
+        <div className="w-40 h-40 bg-white rounded-full flex items-center justify-center relative overflow-hidden transition-all duration-300">
           <div className="w-full h-full relative">
             {selectedAvatar === "google" ? (
               <div className="w-full h-full flex items-center justify-center bg-gray-100">
@@ -51,7 +51,7 @@ export default function Step2Avatar({
           className={`aspect-square rounded-full flex items-center justify-center relative overflow-hidden transition-all border-2
             ${selectedAvatar === "google"
               ? "border-brand-red scale-105"
-              : "border-brand-gray"
+              : ""
             }
           `}
         >
@@ -66,7 +66,7 @@ export default function Step2Avatar({
             className={`aspect-square rounded-full relative overflow-hidden transition-all border-2
               ${selectedAvatar === fileName
                 ? "border-brand-red scale-105"
-                : "border-brand-gray"
+                : ""
               }
             `}
           >

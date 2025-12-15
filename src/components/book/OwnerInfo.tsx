@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { RiMore2Fill, RiMapPinLine } from "@remixicon/react";
+import { RiMapPinLine, RiMore2Fill } from "@remixicon/react";
 import { Book } from "@/data/mockBooks";
 import { useAuth } from "@/context/AuthContext";
 
@@ -27,10 +27,18 @@ export default function OwnerInfo({ owner }: OwnerInfoProps) {
             <div className="flex items-center gap-3">
                 {/* Avatar */}
                 <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 border border-gray-100">
-                    {/* Mock Avatar for now, utilizing 'name' if no image */}
-                    <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-500 font-bold text-lg">
-                        {owner.name.charAt(0)}
-                    </div>
+                    {owner.avatar && owner.avatar !== 'google' ? (
+                        <Image
+                            src={`/assets/avatar/${owner.avatar}`}
+                            alt={owner.name}
+                            fill
+                            className="object-cover"
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-500 font-bold text-lg">
+                            {owner.name.charAt(0)}
+                        </div>
+                    )}
                 </div>
 
                 {/* Info */}

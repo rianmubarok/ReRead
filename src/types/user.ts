@@ -10,5 +10,9 @@ export interface User {
         district: string;
         village: string;
     };
+    coordinates?: {
+        lat: number;
+        lng: number;
+    };
     onboardingCompleted: boolean;
 }

@@ -7,15 +7,30 @@ import { MOCK_BOOKS, Book } from "@/data/mockBooks";
 import BookCard from "@/components/home/BookCard";
 import CategoryFilter from "@/components/home/CategoryFilter";
 
+import { useAuth } from "@/context/AuthContext";
+import { haversineDistance } from "@/utils/distance";
+
+// Helper to parse relative time strings for sorting
+const getRecencyScore = (timeStr: string): number => {
+    const s = timeStr.toLowerCase();
+    if (s.includes("baru saja") || s.includes("just now")) return 0;
+    const num = parseInt(s.match(/\d+/)?.[0] || "0");
+    if (s.includes("menit")) return num;
+    if (s.includes("jam")) return num * 60;
+    if (s.includes("hari")) return num * 1440;
+    if (s.includes("minggu")) return num * 10080;
+    if (s.includes("bulan")) return num * 43200;
+    return 999999;
+};
+
 // Map types to titles and filter logic
 const PAGE_CONFIG = {
     nearby: {
         title: "Buku Terdekat",
-        filter: (books: Book[]) => books, // Show all
+        filter: (books: Book[]) => books, // Show all initially
     },
     recent: {
         title: "Baru Ditambahkan",
-        // Logic: Show all books
         filter: (books: Book[]) => books,
     },
     free: {
@@ -27,6 +42,7 @@ const PAGE_CONFIG = {
 export default function ViewAllPage({ params }: { params: Promise<{ type: string }> }) {
     const { type } = use(params);
     const router = useRouter();
+    const { user } = useAuth();
     const [category, setCategory] = useState("Semua");
 
     const config = PAGE_CONFIG[type as keyof typeof PAGE_CONFIG];
@@ -39,7 +55,22 @@ export default function ViewAllPage({ params }: { params: Promise<{ type: string
         );
     }
 
-    const books = config.filter(MOCK_BOOKS).filter(b => category === "Semua" || b.category === category);
+    // 1. Initial filtered list based on page type
+    const initialBooks = config.filter(MOCK_BOOKS);
+
+    // 2. Filter by category
+    let books = initialBooks.filter(b => category === "Semua" || b.category === category);
+
+    // 3. Sort based on type
+    if (type === "nearby" && user?.coordinates) {
+        books = [...books].sort((a, b) => {
+            const distA = haversineDistance(user?.coordinates, a.owner.coordinates) ?? 99999;
+            const distB = haversineDistance(user?.coordinates, b.owner.coordinates) ?? 99999;
+            return distA - distB;
+        });
+    } else if (type === "recent") {
+        books = [...books].sort((a, b) => getRecencyScore(a.createdAt) - getRecencyScore(b.createdAt));
+    }
 
     return (
         <div className="min-h-screen bg-brand-white pb-32 animate-fade-in pt-36">

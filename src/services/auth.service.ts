@@ -27,6 +27,19 @@ const migrateOldUserData = (): void => {
   }
 };
 
+const DISTRICT_COORDS: Record<string, { lat: number; lng: number }> = {
+  "Panggang": { lat: -6.5900, lng: 110.6700 },
+  "Tahunan": { lat: -6.6200, lng: 110.6800 },
+  "Mlonggo": { lat: -6.5300, lng: 110.7000 },
+  "Batealit": { lat: -6.6300, lng: 110.7200 },
+  "Mayong": { lat: -6.7400, lng: 110.7500 },
+  "Pecangaan": { lat: -6.7000, lng: 110.7000 },
+  "Welahan": { lat: -6.7700, lng: 110.6500 },
+  "Keling": { lat: -6.4600, lng: 110.8500 },
+  "Kembang": { lat: -6.5000, lng: 110.8000 },
+  "Karimunjawa": { lat: -5.8500, lng: 110.4300 },
+};
+
 export const authService = {
   /**
    * Login user (Dev Mode: saves to localStorage via user.storage)
@@ -41,6 +54,13 @@ export const authService = {
     await delay(1000); // Simulate network latency
 
     const uid = generateId("dev-user");
+
+    // Determine coordinates based on district
+    const district = address?.district;
+    const coordinates = (district && DISTRICT_COORDS[district])
+      ? DISTRICT_COORDS[district]
+      : { lat: -6.5818, lng: 110.6684 }; // Default Jepara Center
+
     const userData: User = {
       id: uid, // Keep id for backward compatibility
       uid: uid, // Firebase/Supabase-compatible uid
@@ -48,6 +68,7 @@ export const authService = {
       email: email || `test@mail.com`,
       avatar,
       address,
+      coordinates,
       onboardingCompleted: true,
     };
 
@@ -84,7 +105,19 @@ export const authService = {
 
     // Dev Mode: Read from localStorage via user.storage
     if (DEV_MODE) {
-      return getUser();
+      const user = getUser();
+      if (user && !user.coordinates) {
+        // Polyfill missing coordinates for existing sessions
+        const district = user.address?.district;
+        const coordinates = (district && DISTRICT_COORDS[district])
+          ? DISTRICT_COORDS[district]
+          : { lat: -6.5818, lng: 110.6684 };
+
+        const updatedUser = { ...user, coordinates };
+        setUser(updatedUser); // Update storage
+        return updatedUser;
+      }
+      return user;
     }
 
     return null;

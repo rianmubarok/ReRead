@@ -44,7 +44,12 @@ export default function ActionButtons({ bookId, ownerId }: ActionButtonsProps) {
 
     return (
         <BottomContainer className="gap-4">
-            <Button variant="primary" fullWidth className="flex-1">
+            <Button
+                variant="outline"
+                fullWidth
+                className="flex-1"
+                onClick={() => router.push(`/profile/${ownerId}`)}
+            >
                 Lihat Profil
             </Button>
             <Button

@@ -35,7 +35,7 @@ export default function UserInfo({ user }: UserInfoProps) {
             {user.address && (
                 <div className="flex items-center gap-1 text-sm text-brand-gray mb-4">
                     <RiMapPinLine className="w-4 h-4" />
-                    <span>{user.address.district}, {user.address.regency}</span>
+                    <span>{user.address.district}, {user.address.regency}, {user.address.province}</span>
                 </div>
             )}
 

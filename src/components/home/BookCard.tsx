@@ -5,6 +5,8 @@ import Image from "next/image";
 import { RiMapPinLine } from "@remixicon/react";
 import { Book } from "@/data/mockBooks";
 import Link from "next/link";
+import { useAuth } from "@/context/AuthContext";
+import { haversineDistance, formatDistance } from "@/utils/distance";
 
 interface BookCardProps {
     book: Book;
@@ -14,6 +16,27 @@ interface BookCardProps {
 }
 
 export default function BookCard({ book, variant = "nearby", className, fullWidth = false }: BookCardProps) {
+    const { user } = useAuth();
+
+    // Calculate dynamic distance if coordinates available
+    const isOwner = user?.id === book.owner.id;
+
+    // Calculate dynamic distance or show static address
+    let displayLocation: string;
+
+    if (isOwner) {
+        if (book.owner.address) {
+            displayLocation = `${book.owner.address.district}, ${book.owner.address.regency}, ${book.owner.address.province}`;
+        } else {
+            displayLocation = book.owner.location;
+        }
+    } else {
+        const distanceKm = haversineDistance(user?.coordinates, book.owner.coordinates);
+        displayLocation = distanceKm !== null
+            ? formatDistance(distanceKm)
+            : (book.location || book.distance || "Lokasi tidak diketahui");
+    }
+
     return (
         <Link
             href={`/book/${book.id}`}
@@ -46,7 +69,7 @@ export default function BookCard({ book, variant = "nearby", className, fullWidt
 
                 <div className="flex items-start gap-1 text-xs text-brand-gray">
                     <RiMapPinLine className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                    <span className="line-clamp-1">{book.location || book.distance || "Lokasi tidak diketahui"}</span>
+                    <span className="line-clamp-1">{displayLocation}</span>
                 </div>
             </div>
         </Link>
