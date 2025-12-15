@@ -5,9 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
-  RiSettings4Line,
-  RiQuestionLine,
-  RiInformationLine,
   RiBookOpenLine,
   RiCloseLine,
   RiArrowRightSLine,
@@ -16,6 +13,16 @@ import {
 } from "@remixicon/react";
 import Image from "next/image";
 import { User } from "@/types/user";
+import dynamic from "next/dynamic";
+
+const MapPreview = dynamic<{ lat: number; lng: number }>(() => import("../map/MapPreview"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
+      <RiMapLine className="w-8 h-8 text-gray-400" />
+    </div>
+  ),
+});
 
 interface HomeDrawerProps {
   isOpen: boolean;
@@ -27,6 +34,7 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
   const router = useRouter();
   const { logout } = useAuth();
   const [locationEnabled, setLocationEnabled] = React.useState(false);
+  const [coordinates, setCoordinates] = React.useState<{ lat: number; lng: number } | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
   const handleToggleLocation = async () => {
@@ -41,7 +49,11 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
       setIsLoading(true);
       try {
         navigator.geolocation.getCurrentPosition(
-          () => {
+          (position) => {
+            setCoordinates({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
             setLocationEnabled(true);
             setIsLoading(false);
           },
@@ -62,7 +74,7 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
             setLocationEnabled(false);
             setIsLoading(false);
           },
-          { timeout: 10000, maximumAge: 0 }
+          { timeout: 10000, maximumAge: 0, enableHighAccuracy: true }
         );
       } catch (error) {
         console.error("Error requesting location permission:", error);
@@ -83,6 +95,16 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
         // Set initial state based on permission
         if (permissionStatus.state === "granted") {
           setLocationEnabled(true);
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              setCoordinates({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              });
+            },
+            () => setLocationEnabled(false), // Fallback if actual fetch fails
+            { enableHighAccuracy: true }
+          );
         } else {
           // If prompt or denied, start as disabled
           setLocationEnabled(false);
@@ -92,8 +114,18 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
         permissionStatus.onchange = () => {
           if (permissionStatus.state === "granted") {
             setLocationEnabled(true);
+            navigator.geolocation.getCurrentPosition((position) => {
+              setCoordinates({
+                lat: position.coords.latitude,
+                lng: position.coords.longitude,
+              });
+            },
+              (error) => console.warn(error),
+              { enableHighAccuracy: true }
+            );
           } else {
             setLocationEnabled(false);
+            setCoordinates(null);
           }
         };
       });
@@ -112,30 +144,6 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
       onClick: () => {
         onClose();
         router.push("/my-books");
-      },
-    },
-    {
-      icon: RiSettings4Line,
-      label: "Pengaturan",
-      onClick: () => {
-        onClose();
-        // TODO: Navigate to settings page
-      },
-    },
-    {
-      icon: RiQuestionLine,
-      label: "Bantuan",
-      onClick: () => {
-        onClose();
-        // TODO: Navigate to help page
-      },
-    },
-    {
-      icon: RiInformationLine,
-      label: "Tentang",
-      onClick: () => {
-        onClose();
-        // TODO: Navigate to about page
       },
     },
   ];
@@ -198,16 +206,9 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
               </div>
 
               {/* Mini Map */}
-              {locationEnabled && (
-                <div className="w-full h-32 bg-gray-200 rounded-lg overflow-hidden relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <RiMapLine className="w-8 h-8 text-brand-gray" />
-                  </div>
-                  {/* Placeholder for actual map integration */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-100 to-green-100 opacity-50"></div>
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <div className="w-3 h-3 bg-brand-red rounded-full border-2 border-white shadow-lg"></div>
-                  </div>
+              {locationEnabled && coordinates && (
+                <div className="w-full h-32 bg-gray-200 rounded-lg overflow-hidden relative border border-gray-200">
+                  <MapPreview lat={coordinates.lat} lng={coordinates.lng} />
                 </div>
               )}
             </div>

@@ -129,45 +129,47 @@ export default function Home() {
         >
           <div className="px-6">
 
-          <div className={useComplexAnimation ? "animate-slide-up" : ""}>
-            <HomeWelcome user={user} />
-          </div>
+            <div className={useComplexAnimation ? "animate-slide-up" : ""}>
+              <HomeWelcome user={user} />
+            </div>
 
-          <div
-            className={useComplexAnimation ? "animate-slide-up animate-delay-100" : ""}
-          >
-            <SearchBar />
-          </div>
+            <div
+              className={useComplexAnimation ? "animate-slide-up animate-delay-100" : ""}
+            >
+              <SearchBar />
+            </div>
 
-          <div
-            className={useComplexAnimation ? "animate-slide-up animate-delay-200" : ""}
-          >
-            <CategoryFilter
-              selectedCategory={category}
-              onSelectCategory={setCategory}
-            />
-          </div>
+            <div
+              className={useComplexAnimation ? "animate-slide-up animate-delay-200" : ""}
+            >
+              <CategoryFilter
+                selectedCategory={category}
+                onSelectCategory={setCategory}
+              />
+            </div>
 
-          <div
-            className={useComplexAnimation ? "animate-slide-up animate-delay-300" : ""}
-          >
-            <BookSection
-              title="Terdekat"
-              books={MOCK_BOOKS.slice(0, 5)}
-              variant="nearby"
-            />
-          </div>
+            <div
+              className={useComplexAnimation ? "animate-slide-up animate-delay-300" : ""}
+            >
+              <BookSection
+                title="Terdekat"
+                books={category === "Semua" ? MOCK_BOOKS.slice(0, 8) : MOCK_BOOKS.filter(b => b.category === category)}
+                variant="nearby"
+              />
+            </div>
 
-          <div
-            className={useComplexAnimation ? "animate-slide-up animate-delay-400" : ""}
-          >
-            <BookSection
-              title="Trending"
-              books={MOCK_BOOKS.slice(5, 10)}
-              variant="trending"
-            />
+            <div
+              className={useComplexAnimation ? "animate-slide-up animate-delay-400" : ""}
+            >
+              <BookSection
+                title="Trending"
+                books={category === "Semua"
+                  ? MOCK_BOOKS.filter(b => b.isTrending)
+                  : MOCK_BOOKS.filter(b => b.category === category && b.isTrending)}
+                variant="trending"
+              />
+            </div>
           </div>
-        </div>
         </div>
       </>
     );

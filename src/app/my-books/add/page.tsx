@@ -18,7 +18,6 @@ export default function AddBookPage() {
         category: "Non-Fiksi",
         condition: "Baik",
         description: "",
-        price: "",
     });
 
     const categories = ["Fiksi", "Non-Fiksi", "Pendidikan", "Komik", "Sastra"];
@@ -55,7 +54,6 @@ export default function AddBookPage() {
                     isVerified: true,
                     joinDate: "2024",
                 },
-                price: Number(formData.price) || 0,
                 createdAt: "Baru saja",
                 location: user.address
                     ? `${user.address.district}, ${user.address.regency}`
@@ -67,8 +65,8 @@ export default function AddBookPage() {
             // Note: This will reset on page reload/recompile
             MOCK_BOOKS.unshift(newBook);
 
-            // Navigate back
-            router.push("/my-books");
+            // Navigate back replacing current history entry so "back" doesn't return to form
+            router.replace("/my-books");
         } else {
             alert("Silakan login terlebih dahulu");
             setIsLoading(false);
@@ -161,20 +159,6 @@ export default function AddBookPage() {
                         </div>
                     </div>
 
-                    {/* Price */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-brand-black">Harga (Opsional)</label>
-                        <input
-                            type="number"
-                            name="price"
-                            placeholder="Rp 0"
-                            value={formData.price}
-                            onChange={handleChange}
-                            className="w-full bg-gray-50 border border-gray-200 text-brand-black rounded-xl px-4 py-3 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-brand-black transition-all"
-                        />
-                        <p className="text-xs text-brand-gray">Kosongkan jika ingin barter/gratis.</p>
-                    </div>
-
                     {/* Description */}
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-brand-black">Deskripsi</label>
@@ -193,7 +177,7 @@ export default function AddBookPage() {
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className={`w-full bg-brand-black text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all active:scale-95 ${isLoading ? 'opacity-70 cursor-wait' : 'hover:scale-[1.02]'}`}
+                        className={`w-full bg-brand-black text-white font-bold py-4 rounded-full transition-all active:scale-95 ${isLoading ? 'opacity-70 cursor-wait' : 'hover:scale-[1.02]'}`}
                     >
                         {isLoading ? "Menambahkan..." : "Tambah Buku"}
                     </button>
