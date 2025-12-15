@@ -1,6 +1,6 @@
 import React from "react";
 import Link from "next/link";
-import { RiArrowRightSLine, RiCheckDoubleLine } from "@remixicon/react";
+import { RiArrowRightSLine, RiShakeHandsLine } from "@remixicon/react";
 import { ChatMessage } from "@/types/chat";
 import { MOCK_BOOKS } from "@/data/mockBooks";
 import { formatMessageTime } from "@/utils/dateUtils";
@@ -26,15 +26,13 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, user, currentUse
         <div
             className={`flex ${isMe ? "justify-end" : "justify-start"} items-end gap-2`}
         >
-
-
             <div
                 className={`w-full ${isMe ? "items-end" : "items-start"} flex flex-col gap-1.5`}
             >
                 {message.messageType === 'exchange_request' && message.exchangeRequest ? (
-                    <div className={`rounded-2xl p-4 w-64 ${isMe ? "bg-brand-red text-white ml-auto" : "bg-white border border-gray-100"}`}>
-                        <div className="flex items-center gap-2 mb-3 pb-3 border-b border-white/20">
-                            <RiCheckDoubleLine className="w-5 h-5" />
+                    <div className={`rounded-2xl p-4 w-64 ${isMe ? "bg-brand-red text-white ml-auto" : "bg-white border border-gray-100 text-brand-black"}`}>
+                        <div className={`flex items-center gap-2 mb-3 pb-3 border-b ${isMe ? "border-white/20" : "border-gray-100"}`}>
+                            <RiShakeHandsLine className="w-5 h-5" />
                             <span className="font-bold text-sm">Pengajuan Selesai</span>
                         </div>
 
@@ -152,8 +150,6 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, user, currentUse
                     )}
                 </div>
             </div>
-
-
         </div>
     );
 };

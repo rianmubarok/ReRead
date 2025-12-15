@@ -1,5 +1,5 @@
 "use client";
-
+// Force refresh for mock data update
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import ChatDetailHeader from "@/components/chat/ChatDetailHeader";

@@ -79,7 +79,7 @@ export const MOCK_CHATS: LegacyChatThread[] = [
     {
         id: "chat2",
         user: MOCK_USERS[1], // user2: Jiddan
-        lastMessage: "Masih bagus kok bukunya, jarang dibaca.",
+        lastMessage: "Permintaan konfirmasi: Saya sudah terima bukunya ya kak.",
 
         timestamp: "Kemarin",
         unreadCount: 0,
@@ -116,8 +116,8 @@ export const MOCK_CHATS: LegacyChatThread[] = [
             {
                 id: "m5",
                 senderId: "user2",
-                text: "Oke kalau gitu saya ajukan selesai ya kak.",
-                timestamp: "09:42",
+                text: "Permintaan konfirmasi: Saya sudah terima bukunya ya kak.",
+                timestamp: "Baru saja",
                 isRead: true,
                 messageType: "exchange_request",
                 exchangeRequest: {
