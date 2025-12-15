@@ -44,14 +44,10 @@ export default function BookCard({ book, variant = "nearby", className, fullWidt
                     {book.title}
                 </h3>
 
-                {variant === "nearby" && book.location ? (
-                    <div className="flex items-start gap-1 text-xs text-brand-gray">
-                        <RiMapPinLine className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                        <span className="line-clamp-1">{book.location}</span>
-                    </div>
-                ) : (
-                    <p className="text-xs text-brand-gray line-clamp-1">{book.author}</p>
-                )}
+                <div className="flex items-start gap-1 text-xs text-brand-gray">
+                    <RiMapPinLine className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                    <span className="line-clamp-1">{book.location || book.distance || "Lokasi tidak diketahui"}</span>
+                </div>
             </div>
         </Link>
     );
