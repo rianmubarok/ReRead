@@ -3,7 +3,12 @@
 import React from "react";
 import { RiSearchLine, RiMore2Fill } from "@remixicon/react";
 
-export default function BookmarksHeader() {
+interface BookmarksHeaderProps {
+  searchQuery: string;
+  onSearchChange: (q: string) => void;
+}
+
+export default function BookmarksHeader({ searchQuery, onSearchChange }: BookmarksHeaderProps) {
   return (
     <div className="fixed top-0 left-0 right-0 w-full max-w-md mx-auto bg-brand-white px-6 z-50">
       <div className="flex items-center gap-4 py-6 pt-6">
@@ -13,6 +18,8 @@ export default function BookmarksHeader() {
           <input
             type="text"
             placeholder="Cari simpanan"
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
             className="w-full bg-gray-100 text-brand-black rounded-full pl-11 pr-4 py-3.5 placeholder:text-brand-gray focus:outline-none focus:ring-1 focus:ring-brand-red/50 transition-shadow"
           />
         </div>

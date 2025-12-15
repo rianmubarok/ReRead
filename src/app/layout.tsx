@@ -7,6 +7,7 @@ import MobileContainer from "@/components/layout/MobileContainer";
 import BottomNav from "@/components/navigation/BottomNav";
 import { NavProvider } from "@/context/NavContext";
 import { AuthProvider } from "@/context/AuthContext";
+import AuthGuard from "@/components/auth/AuthGuard";
 import { Toaster } from "react-hot-toast";
 
 const dmSans = DM_Sans({
@@ -40,14 +41,16 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <NavProvider>
-            <MobileContainer>
-              <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
-                {children}
-              </main>
-              <BottomNav />
-            </MobileContainer>
-          </NavProvider>
+          <AuthGuard>
+            <NavProvider>
+              <MobileContainer>
+                <main className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
+                  {children}
+                </main>
+                <BottomNav />
+              </MobileContainer>
+            </NavProvider>
+          </AuthGuard>
         </AuthProvider>
         <Toaster position="top-center" toastOptions={{
           style: {

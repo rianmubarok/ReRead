@@ -55,6 +55,14 @@ export default function ChatDetailPage() {
                     avatar: existingChat.user.avatar,
                     status: "Aktif"
                 });
+
+                // FORCE UPDATE/RESET for Dev/Demo:
+                // If this is chat1 (Nadia), force clear store to pick up new mock changes
+                // regarding unread messages.
+                if (chatId === "chat1") {
+                    chatStore.clearMessages(chatId);
+                    setMessages([]); // Clear local state to trigger full reload logic below
+                }
             }
 
             // 2. Check for book context if bookId is present
@@ -228,7 +236,7 @@ export default function ChatDetailPage() {
                                         <MessageBubble
                                             message={msg}
                                             user={user}
-                                            currentUserId={currentUser?.id || ""}
+                                            currentUserId={currentUser?.id || "me"}
                                         />
                                     </React.Fragment>
                                 );

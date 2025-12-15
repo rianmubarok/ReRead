@@ -153,7 +153,9 @@ export default function Home() {
             >
               <BookSection
                 title="Terdekat"
-                books={category === "Semua" ? MOCK_BOOKS.slice(0, 8) : MOCK_BOOKS.filter(b => b.category === category).slice(0, 8)}
+                books={(category === "Semua" ? MOCK_BOOKS : MOCK_BOOKS.filter(b => b.category === category))
+                  .filter(b => b.owner.id !== user?.id)
+                  .slice(0, 8)}
                 variant="nearby"
                 href="/books/nearby"
               />
@@ -164,9 +166,9 @@ export default function Home() {
             >
               <BookSection
                 title="Baru Ditambahkan"
-                books={category === "Semua"
-                  ? MOCK_BOOKS.slice(0, 8)
-                  : MOCK_BOOKS.filter(b => b.category === category).slice(0, 8)}
+                books={(category === "Semua" ? MOCK_BOOKS : MOCK_BOOKS.filter(b => b.category === category))
+                  .filter(b => b.owner.id !== user?.id)
+                  .slice(0, 8)}
                 variant="trending"
                 href="/books/recent"
               />
@@ -179,7 +181,8 @@ export default function Home() {
                 title="Siap Dipinjam / Gratis"
                 books={MOCK_BOOKS.filter(b =>
                   (!b.price || b.price === 0) &&
-                  (category === "Semua" || b.category === category)
+                  (category === "Semua" || b.category === category) &&
+                  b.owner.id !== user?.id
                 ).slice(0, 8)}
                 href="/books/free"
               />

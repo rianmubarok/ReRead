@@ -69,14 +69,21 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, user, currentUse
                 <div
                     className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${isMe
                         ? "bg-brand-red text-white rounded-br-sm"
-                        : "bg-white text-gray-800 border border-gray-100 rounded-bl-sm"
+                        : !isMe && message.isRead === false
+                            ? "bg-red-50/50 text-brand-black border border-red-200 rounded-bl-sm shadow-sm font-medium"
+                            : "bg-white text-gray-800 border border-gray-100 rounded-bl-sm"
                         }`}
                 >
                     {message.text}
                 </div>
-                <span className={`text-[10px] ${isMe ? "text-gray-400" : "text-gray-400"} px-1 -mt-0.5`}>
-                    {formatMessageTime(message.timestamp)}
-                </span>
+                <div className={`flex items-center gap-1 px-1 -mt-0.5 ${isMe ? "justify-end" : "justify-start"}`}>
+                    <span className={`text-[10px] ${isMe ? "text-gray-400" : "text-gray-400"}`}>
+                        {formatMessageTime(message.timestamp)}
+                    </span>
+                    {!isMe && message.isRead === false && (
+                        <span className="w-1.5 h-1.5 bg-brand-red rounded-full" title="Belum dibaca" />
+                    )}
+                </div>
             </div>
 
 

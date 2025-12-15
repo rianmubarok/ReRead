@@ -63,7 +63,14 @@ export const MOCK_CHATS: LegacyChatThread[] = [
             {
                 id: "m7",
                 senderId: "user1",
-                text: "Besok segera saya kirim ya kak, ditunggu resinya.",
+                text: "Besok segera saya kirim ya kak.",
+                timestamp: "09:12",
+                isRead: false,
+            },
+            {
+                id: "m8",
+                senderId: "user1",
+                text: "Ditunggu resinya ya.",
                 timestamp: "09:12",
                 isRead: false,
             },

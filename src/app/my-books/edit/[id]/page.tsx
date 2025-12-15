@@ -79,7 +79,7 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
             book.price = formData.price ? Number(formData.price) : undefined;
 
             // Navigate back
-            router.push("/my-books");
+            router.back();
         } else {
             setIsLoading(false);
         }
@@ -180,19 +180,7 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
                         </div>
                     </div>
 
-                    {/* Price */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-brand-black">Harga (Opsional)</label>
-                        <input
-                            type="number"
-                            name="price"
-                            placeholder="Rp 0"
-                            value={formData.price}
-                            onChange={handleChange}
-                            className="w-full bg-gray-50 border border-gray-200 text-brand-black rounded-xl px-4 py-3 placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-brand-black transition-all"
-                        />
-                        <p className="text-xs text-brand-gray">Kosongkan jika ingin barter/gratis.</p>
-                    </div>
+                    {/* Price - REMOVED */}
 
                     {/* Description */}
                     <div className="space-y-2">

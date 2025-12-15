@@ -6,6 +6,7 @@ import { RiArrowLeftLine, RiImageAddLine } from "@remixicon/react";
 import { useAuth } from "@/context/AuthContext";
 import { MOCK_BOOKS, Book } from "@/data/mockBooks";
 import toast from "react-hot-toast";
+import SearchableDropdown from "@/components/ui/SearchableDropdown";
 
 export default function AddBookPage() {
     const router = useRouter();
@@ -102,8 +103,8 @@ export default function AddBookPage() {
 
             toast.success("Buku berhasil ditambahkan!");
 
-            // Navigate back replacing current history entry so "back" doesn't return to form
-            router.replace("/my-books");
+            // Navigate back to previous page (My Books)
+            router.back();
         } else {
             toast.error("Silakan login terlebih dahulu");
             setIsLoading(false);
@@ -166,31 +167,23 @@ export default function AddBookPage() {
                         {/* Category */}
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-brand-black">Kategori</label>
-                            <select
-                                name="category"
+                            <SearchableDropdown
+                                options={categories.map(c => ({ code: c, name: c }))}
                                 value={formData.category}
-                                onChange={handleChange}
-                                className="w-full bg-gray-50 border border-gray-200 text-brand-black rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-brand-black transition-all appearance-none"
-                            >
-                                {categories.map(c => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
+                                onChange={(val) => setFormData(prev => ({ ...prev, category: val }))}
+                                placeholder="Pilih Kategori"
+                            />
                         </div>
 
                         {/* Condition */}
                         <div className="space-y-2">
                             <label className="text-sm font-bold text-brand-black">Kondisi</label>
-                            <select
-                                name="condition"
+                            <SearchableDropdown
+                                options={conditions.map(c => ({ code: c, name: c }))}
                                 value={formData.condition}
-                                onChange={handleChange}
-                                className="w-full bg-gray-50 border border-gray-200 text-brand-black rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-brand-black transition-all appearance-none"
-                            >
-                                {conditions.map(c => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
+                                onChange={(val) => setFormData(prev => ({ ...prev, condition: val }))}
+                                placeholder="Pilih Kondisi"
+                            />
                         </div>
                     </div>
 

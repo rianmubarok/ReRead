@@ -122,4 +122,19 @@ export const authService = {
 
     return null;
   },
+  /**
+   * Update user profile
+   */
+  updateProfile: async (updates: Partial<User>): Promise<User | null> => {
+    // Dev Mode: Update localStorage via user.storage
+    if (DEV_MODE) {
+      const currentUser = getUser();
+      if (!currentUser) return null;
+
+      const updatedUser = { ...currentUser, ...updates };
+      setUser(updatedUser);
+      return updatedUser;
+    }
+    return null;
+  },
 };

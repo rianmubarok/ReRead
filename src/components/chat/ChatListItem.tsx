@@ -43,8 +43,8 @@ export default function ChatListItem({ chat }: ChatListItemProps) {
                         />
                         {/* Fallback initials underneath (visible if image fails/hidden) */}
                         <div className={`absolute inset-0 flex items-center justify-center -z-10 ${chat.id === '2' ? 'bg-blue-100' :
-                                chat.id === '3' ? 'bg-green-100' :
-                                    chat.id === '4' ? 'bg-purple-100' : 'bg-orange-100'
+                            chat.id === '3' ? 'bg-green-100' :
+                                chat.id === '4' ? 'bg-purple-100' : 'bg-orange-100'
                             }`}>
                             <span className="font-bold text-brand-black text-lg">
                                 {chat.user.name.charAt(0)}
@@ -60,13 +60,20 @@ export default function ChatListItem({ chat }: ChatListItemProps) {
                     <h3 className="font-bold text-brand-black truncate pr-2">
                         {chat.user.name}
                     </h3>
-                    <span className="text-xs text-gray-400 flex-shrink-0">
+                    <span className={`text-xs flex-shrink-0 ${chat.unreadCount > 0 ? "text-brand-red font-medium" : "text-gray-400"}`}>
                         {chat.timestamp}
                     </span>
                 </div>
-                <p className="text-sm text-gray-500 truncate">
-                    {chat.lastMessage}
-                </p>
+                <div className="flex justify-between items-center">
+                    <p className={`text-sm truncate flex-1 ${chat.unreadCount > 0 ? "text-brand-black font-semibold" : "text-gray-500"}`}>
+                        {chat.lastMessage}
+                    </p>
+                    {chat.unreadCount > 0 && (
+                        <div className="ml-2 bg-brand-red text-white text-[10px] font-bold px-1.5 h-4 flex items-center justify-center rounded-full min-w-[16px]">
+                            {chat.unreadCount}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

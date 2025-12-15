@@ -10,6 +10,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (name: string, avatar: string, address: any) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (updates: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,12 +64,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateUser = async (updates: Partial<User>) => {
+    try {
+      const updatedUser = await authService.updateProfile(updates);
+      if (updatedUser) {
+        setUser(updatedUser);
+      }
+    } catch (error) {
+      console.error("Update user failed:", error);
+    }
+  };
+
   const value = {
     user,
     isAuthenticated: !!user,
     isLoading,
     login,
     logout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

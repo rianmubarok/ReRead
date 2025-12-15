@@ -14,6 +14,7 @@ import {
   RiUserLine,
   RiUserFill,
 } from "@remixicon/react";
+import { MOCK_CHATS } from "@/data/mockChats";
 
 export default function BottomNav() {
   const { isVisible } = useNav();
@@ -59,10 +60,13 @@ export default function BottomNav() {
               }`}
           >
             <div
-              className={`mb-1 transition-transform duration-200 ${isActive ? "scale-110" : "group-hover:scale-105"
+              className={`relative mb-1 transition-transform duration-200 ${isActive ? "scale-110" : "group-hover:scale-105"
                 }`}
             >
               <Icon size={24} />
+              {item.label === "Chat" && MOCK_CHATS.reduce((acc, chat) => acc + chat.unreadCount, 0) > 0 && (
+                <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-brand-red rounded-full border-2 border-white translate-x-1/4 -translate-y-1/4" />
+              )}
             </div>
           </Link>
         );

@@ -10,8 +10,8 @@ import {
   RiArrowRightSLine,
   RiMapPinLine,
   RiMapLine,
+  RiRefreshLine,
 } from "@remixicon/react";
-import Image from "next/image";
 import { User } from "@/types/user";
 import dynamic from "next/dynamic";
 
@@ -32,45 +32,30 @@ interface HomeDrawerProps {
 
 export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { logout, updateUser } = useAuth();
   const [locationEnabled, setLocationEnabled] = React.useState(false);
   const [coordinates, setCoordinates] = React.useState<{ lat: number; lng: number } | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleToggleLocation = async () => {
-    if (isLoading) return;
+  const updateLocation = (lat: number, lng: number) => {
+    setCoordinates({ lat, lng });
+    setLocationEnabled(true);
+    setIsLoading(false);
 
-    if (locationEnabled) {
-      setLocationEnabled(false);
-      return;
-    }
+    // Update global user context so distances are recalculated
+    updateUser({ coordinates: { lat, lng } });
+  };
 
+  const requestLocation = () => {
     if ("geolocation" in navigator) {
       setIsLoading(true);
       try {
         navigator.geolocation.getCurrentPosition(
           (position) => {
-            setCoordinates({
-              lat: position.coords.latitude,
-              lng: position.coords.longitude,
-            });
-            setLocationEnabled(true);
-            setIsLoading(false);
+            updateLocation(position.coords.latitude, position.coords.longitude);
           },
           (error) => {
-            let errorMessage = "Terjadi kesalahan saat mengambil lokasi.";
-            // Use logical checks or integers for error codes safely
-            if (error.code === 1 /* PERMISSION_DENIED */) {
-              errorMessage = "Izin lokasi ditolak. Silakan aktifkan di pengaturan browser.";
-            } else if (error.code === 2 /* POSITION_UNAVAILABLE */) {
-              errorMessage = "Informasi lokasi tidak tersedia.";
-            } else if (error.code === 3 /* TIMEOUT */) {
-              errorMessage = "Waktu permintaan lokasi habis.";
-            }
-
             console.warn("Location error:", error.message);
-            // Optional: Show error to user via toast/alert if needed
-            // alert(errorMessage); 
             setLocationEnabled(false);
             setIsLoading(false);
           },
@@ -83,52 +68,53 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
     }
   };
 
+  const handleToggleLocation = async () => {
+    if (isLoading) return;
+
+    if (locationEnabled) {
+      setLocationEnabled(false);
+      return;
+    }
+
+    requestLocation();
+  };
+
+  const handleRefreshLocation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isLoading) return;
+    requestLocation();
+  };
+
   React.useEffect(() => {
     // Check initial permission status if supported
     if ("permissions" in navigator && "geolocation" in navigator) {
-      navigator.permissions.query({ name: "geolocation" }).catch(() => {
-        // Fallback for browsers regarding permissions API
-        return null;
-      }).then((permissionStatus) => {
-        if (!permissionStatus) return;
+      navigator.permissions.query({ name: "geolocation" }).catch(() => null)
+        .then((permissionStatus) => {
+          if (!permissionStatus) return;
 
-        // Set initial state based on permission
-        if (permissionStatus.state === "granted") {
-          setLocationEnabled(true);
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              setCoordinates({
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-              });
-            },
-            () => setLocationEnabled(false), // Fallback if actual fetch fails
-            { enableHighAccuracy: true }
-          );
-        } else {
-          // If prompt or denied, start as disabled
-          setLocationEnabled(false);
-        }
-
-        // Listen for status changes (e.g. user toggles in browser settings)
-        permissionStatus.onchange = () => {
           if (permissionStatus.state === "granted") {
             setLocationEnabled(true);
-            navigator.geolocation.getCurrentPosition((position) => {
-              setCoordinates({
-                lat: position.coords.latitude,
-                lng: position.coords.longitude,
-              });
-            },
-              (error) => console.warn(error),
-              { enableHighAccuracy: true }
-            );
+            if (!coordinates && user?.coordinates) {
+              setCoordinates(user.coordinates);
+            } else if (!coordinates) {
+              navigator.geolocation.getCurrentPosition(
+                (position) => updateLocation(position.coords.latitude, position.coords.longitude),
+                () => setLocationEnabled(false),
+                { enableHighAccuracy: true }
+              );
+            }
           } else {
             setLocationEnabled(false);
-            setCoordinates(null);
           }
-        };
-      });
+
+          permissionStatus.onchange = () => {
+            if (permissionStatus.state === "granted") {
+              requestLocation();
+            } else {
+              setLocationEnabled(false);
+            }
+          };
+        });
     }
   }, []);
 
@@ -192,17 +178,31 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
                     Izinkan Lokasi
                   </span>
                 </div>
-                <button
-                  onClick={handleToggleLocation}
-                  disabled={isLoading}
-                  className={`w-10 h-5 rounded-full p-1 transition-colors duration-200 ease-in-out ${locationEnabled ? "bg-green-500" : "bg-gray-300"
-                    } ${isLoading ? "opacity-70 cursor-wait" : ""}`}
-                >
-                  <div
-                    className={`bg-white w-3 h-3 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${locationEnabled ? "translate-x-5" : "translate-x-0"
-                      }`}
-                  />
-                </button>
+
+                <div className="flex items-center gap-2">
+                  {locationEnabled && (
+                    <button
+                      onClick={handleRefreshLocation}
+                      disabled={isLoading}
+                      className={`p-1.5 rounded-full text-brand-black hover:bg-gray-200 transition-colors ${isLoading ? "animate-spin" : ""}`}
+                      title="Perbarui Lokasi"
+                    >
+                      <RiRefreshLine className="w-5 h-5" />
+                    </button>
+                  )}
+
+                  <button
+                    onClick={handleToggleLocation}
+                    disabled={isLoading}
+                    className={`w-10 h-5 rounded-full p-1 transition-colors duration-200 ease-in-out ${locationEnabled ? "bg-green-500" : "bg-gray-300"
+                      } ${isLoading ? "opacity-70 cursor-wait" : ""}`}
+                  >
+                    <div
+                      className={`bg-white w-3 h-3 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${locationEnabled ? "translate-x-5" : "translate-x-0"
+                        }`}
+                    />
+                  </button>
+                </div>
               </div>
 
               {/* Mini Map */}
@@ -229,6 +229,20 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
                 </button>
               ))}
             </div>
+
+            {/* Logout Button (Optional usage, though not in original menuItems was used?) 
+                Wait, previous file had logout call but not used in UI except maybe hidden? 
+                Ah, I see handleLogout separate from menuItems. 
+                Original had it? No, checking original `UserInfo` had Edit Profile. 
+                `HomeDrawer` had Menu Items. 
+                Wait, did `HomeDrawer` have logout?
+                Checking previous view (step 200).
+                It had `handleLogout` defined but NOT USED in the jsx returned.
+                The previous file only rendered `menuItems`.
+                So I will omit logout button from UI if it wasn't there, or maybe add it if it makes sense.
+                The user didn't ask for logout button.
+                I will stick to keeping the file valid.
+            */}
           </div>
         </div>
       </div>

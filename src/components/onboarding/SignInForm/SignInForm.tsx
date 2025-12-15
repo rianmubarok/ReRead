@@ -138,7 +138,7 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
       </div>
 
       {/* Bottom Button */}
-      <BottomContainer className="gap-4">
+      <BottomContainer className="gap-4" variant="absolute">
         {step > 1 && (
           <Button variant="outline" fullWidth onClick={handleBack} className="flex-1">
             Kembali
