@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -13,17 +12,20 @@ import {
   RiRefreshLine,
   RiHistoryLine,
 } from "@remixicon/react";
-import { User } from "@/types/user";
+import { Coordinates, User } from "@/types/user";
 import dynamic from "next/dynamic";
 
-const MapPreview = dynamic<{ lat: number; lng: number }>(() => import("../map/MapPreview"), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
-      <RiMapLine className="w-8 h-8 text-gray-400" />
-    </div>
-  ),
-});
+const MapPreview = dynamic<{ lat: number; lng: number }>(
+  () => import("../map/MapPreview"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
+        <RiMapLine className="w-8 h-8 text-gray-400" />
+      </div>
+    ),
+  }
+);
 
 interface HomeDrawerProps {
   isOpen: boolean;
@@ -33,10 +35,13 @@ interface HomeDrawerProps {
 
 export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
   const router = useRouter();
-  const { logout, updateUser } = useAuth();
+  const { updateUser } = useAuth();
   const [locationEnabled, setLocationEnabled] = React.useState(false);
-  const [coordinates, setCoordinates] = React.useState<{ lat: number; lng: number } | null>(null);
+  const [coordinates, setCoordinates] = React.useState<Coordinates | null>(
+    null
+  );
   const [isLoading, setIsLoading] = React.useState(false);
+  const permissionStatusRef = React.useRef<PermissionStatus | null>(null);
 
   const updateLocation = (lat: number, lng: number) => {
     setCoordinates({ lat, lng });
@@ -89,17 +94,24 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
   React.useEffect(() => {
     // Check initial permission status if supported
     if ("permissions" in navigator && "geolocation" in navigator) {
-      navigator.permissions.query({ name: "geolocation" }).catch(() => null)
+      navigator.permissions
+        .query({ name: "geolocation" })
+        .catch(() => null)
         .then((permissionStatus) => {
           if (!permissionStatus) return;
 
+          permissionStatusRef.current = permissionStatus;
           if (permissionStatus.state === "granted") {
             setLocationEnabled(true);
             if (!coordinates && user?.coordinates) {
               setCoordinates(user.coordinates);
             } else if (!coordinates) {
               navigator.geolocation.getCurrentPosition(
-                (position) => updateLocation(position.coords.latitude, position.coords.longitude),
+                (position) =>
+                  updateLocation(
+                    position.coords.latitude,
+                    position.coords.longitude
+                  ),
                 () => setLocationEnabled(false),
                 { enableHighAccuracy: true }
               );
@@ -117,12 +129,18 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
           };
         });
     }
+    return () => {
+      if (permissionStatusRef.current) {
+        permissionStatusRef.current.onchange = null;
+        permissionStatusRef.current = null;
+      }
+    };
   }, []);
 
-  const handleLogout = async () => {
-    await logout();
-    router.push("/");
-  };
+  React.useEffect(() => {
+    if (!locationEnabled || !user?.coordinates) return;
+    setCoordinates(user.coordinates);
+  }, [locationEnabled, user?.coordinates]);
 
   const menuItems = [
     {
@@ -154,14 +172,13 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
       )}
 
       {/* Drawer */}
-      <div
-        className="fixed top-0 w-full max-w-md h-full pointer-events-none z-[60] left-1/2 -translate-x-1/2 overflow-hidden"
-      >
+      <div className="fixed top-0 w-full max-w-md h-full pointer-events-none z-[60] left-1/2 -translate-x-1/2 overflow-hidden">
         <div
-          className={`h-full w-80 max-w-[85vw] bg-brand-white transition-transform duration-300 ease-in-out ${isOpen
-            ? "pointer-events-auto translate-x-0"
-            : "pointer-events-none -translate-x-full"
-            }`}
+          className={`h-full w-80 max-w-[85vw] bg-brand-white transition-transform duration-300 ease-in-out ${
+            isOpen
+              ? "pointer-events-auto translate-x-0"
+              : "pointer-events-none -translate-x-full"
+          }`}
           style={{
             willChange: "transform",
           }}
@@ -193,7 +210,9 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
                     <button
                       onClick={handleRefreshLocation}
                       disabled={isLoading}
-                      className={`p-1.5 rounded-full text-brand-black hover:bg-gray-200 transition-colors ${isLoading ? "animate-spin" : ""}`}
+                      className={`p-1.5 rounded-full text-brand-black hover:bg-gray-200 transition-colors ${
+                        isLoading ? "animate-spin" : ""
+                      }`}
                       title="Perbarui Lokasi"
                     >
                       <RiRefreshLine className="w-5 h-5" />
@@ -203,12 +222,14 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
                   <button
                     onClick={handleToggleLocation}
                     disabled={isLoading}
-                    className={`w-10 h-5 rounded-full p-1 transition-colors duration-200 ease-in-out ${locationEnabled ? "bg-green-500" : "bg-gray-300"
-                      } ${isLoading ? "opacity-70 cursor-wait" : ""}`}
+                    className={`w-10 h-5 rounded-full p-1 transition-colors duration-200 ease-in-out ${
+                      locationEnabled ? "bg-green-500" : "bg-gray-300"
+                    } ${isLoading ? "opacity-70 cursor-wait" : ""}`}
                   >
                     <div
-                      className={`bg-white w-3 h-3 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${locationEnabled ? "translate-x-5" : "translate-x-0"
-                        }`}
+                      className={`bg-white w-3 h-3 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
+                        locationEnabled ? "translate-x-5" : "translate-x-0"
+                      }`}
                     />
                   </button>
                 </div>

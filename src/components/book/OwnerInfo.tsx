@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { RiMapPinLine, RiMore2Fill } from "@remixicon/react";
-import { Book } from "@/data/mockBooks";
+import { Book } from "@/types/book";
 import { useAuth } from "@/context/AuthContext";
 
 interface OwnerInfoProps {

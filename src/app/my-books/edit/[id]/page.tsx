@@ -4,7 +4,8 @@ import React, { use, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { RiArrowLeftLine, RiImageAddLine } from "@remixicon/react";
 import { useAuth } from "@/context/AuthContext";
-import { MOCK_BOOKS, Book } from "@/data/mockBooks";
+import { MOCK_BOOKS } from "@/data/mockBooks";
+import { Book } from "@/types/book";
 import { notFound } from "next/navigation";
 
 export default function EditBookPage({ params }: { params: Promise<{ id: string }> }) {

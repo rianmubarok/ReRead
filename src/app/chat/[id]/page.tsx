@@ -13,7 +13,7 @@ import { useNav } from "@/context/NavContext";
 import { chatService } from "@/services/chat.service";
 import { ChatMessage } from "@/types/chat";
 import { useChatStore } from "@/stores/chat.store";
-import { Book } from "@/data/mockBooks";
+import { Book } from "@/types/book";
 import { parseMockDate, formatChatDate } from "@/utils/dateUtils";
 import { useAuth } from "@/context/AuthContext";
 

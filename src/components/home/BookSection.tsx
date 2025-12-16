@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Book } from "@/data/mockBooks";
+import { Book } from "@/types/book";
 import BookCard from "./BookCard";
 import { RiArrowRightSLine } from "@remixicon/react";
 import { useDraggableScroll } from "@/hooks/useDraggableScroll";

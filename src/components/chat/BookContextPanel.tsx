@@ -1,5 +1,5 @@
 import React from "react";
-import { Book } from "@/data/mockBooks";
+import { Book } from "@/types/book";
 import { RiCloseFill, RiArrowDownSLine } from "@remixicon/react";
 
 interface BookContextPanelProps {

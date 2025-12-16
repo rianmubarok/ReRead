@@ -10,7 +10,7 @@ import {
   ChatMessageWithSender,
 } from "@/types/chat";
 import { User } from "@/types/user";
-import { Book } from "@/data/mockBooks";
+import { Book } from "@/types/book";
 
 /**
  * Convert database message to frontend ChatMessage

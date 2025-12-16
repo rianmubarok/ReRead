@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { RiMapPinLine } from "@remixicon/react";
-import { Book } from "@/data/mockBooks";
+import { Book } from "@/types/book";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { haversineDistance, formatDistance } from "@/utils/distance";
@@ -29,13 +29,13 @@ export default function BookCard({ book, variant = "nearby", className, fullWidt
         if (book.owner.address) {
             displayLocation = `${book.owner.address.district}, ${book.owner.address.regency}, ${book.owner.address.province}`;
         } else {
-            displayLocation = book.owner.location;
+            displayLocation = book.owner.locationLabel || "Lokasi tidak diketahui";
         }
     } else {
         const distanceKm = haversineDistance(user?.coordinates, book.owner.coordinates);
         displayLocation = distanceKm !== null
             ? formatDistance(distanceKm)
-            : (book.location || book.distance || "Lokasi tidak diketahui");
+            : (book.locationLabel || book.distanceLabel || "Lokasi tidak diketahui");
     }
 
     return (

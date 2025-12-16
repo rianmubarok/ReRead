@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { RiCloseLine, RiCheckLine } from "@remixicon/react";
-import { Book } from "@/data/mockBooks";
+import { Book } from "@/types/book";
 
 interface CompleteExchangeModalProps {
     isOpen: boolean;

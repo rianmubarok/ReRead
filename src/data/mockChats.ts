@@ -1,5 +1,5 @@
-import { MOCK_USERS, User } from "./mockUsers";
-import { MOCK_BOOKS, Book } from "./mockBooks";
+import { MOCK_USERS } from "./mockUsers";
+import { MOCK_BOOKS } from "./mockBooks";
 import { LegacyMessage, LegacyChatThread } from "@/types/chat";
 
 // Re-export types for backward compatibility

@@ -1,7 +1,5 @@
+import { getUserRepository } from "@/repositories/user.repository";
 import { User } from "@/types/user";
-import { getUser, setUser } from "@/storage/user.storage";
-import { delay, DEV_MODE } from "@/utils/constants";
-// import { supabase } from "@/lib/supabase"; // Uncomment when Supabase is ready
 
 export const userService = {
   /**
@@ -16,25 +14,8 @@ export const userService = {
    *   .single();
    */
   getUserProfile: async (uid: string): Promise<User | null> => {
-    await delay(500);
-
-    // Dev Mode: Read from user.storage
-    if (DEV_MODE) {
-      const user = getUser();
-      if (user && user.uid === uid) {
-        return user;
-      }
-    }
-
-    // TODO: Replace with Supabase query
-    // const { data, error } = await supabase
-    //   .from('users')
-    //   .select('*')
-    //   .eq('uid', uid)
-    //   .single();
-    // return data;
-
-    return null;
+    const repo = getUserRepository();
+    return repo.getUserProfile(uid);
   },
 
   /**
@@ -53,30 +34,8 @@ export const userService = {
     uid: string,
     updates: Partial<User>
   ): Promise<User> => {
-    await delay(500);
-
-    // Dev Mode: Update via user.storage
-    if (DEV_MODE) {
-      const user = getUser();
-      if (user && user.uid === uid) {
-        const updated = { ...user, ...updates };
-        setUser(updated);
-        return updated;
-      }
-      throw new Error("User not found");
-    }
-
-    // TODO: Replace with Supabase update
-    // const { data, error } = await supabase
-    //   .from('users')
-    //   .update(updates)
-    //   .eq('uid', uid)
-    //   .select()
-    //   .single();
-    // if (error) throw error;
-    // return data;
-
-    throw new Error("User not found");
+    const repo = getUserRepository();
+    return repo.updateUserProfile(uid, updates);
   },
 
   /**
@@ -84,22 +43,7 @@ export const userService = {
    * TODO: Implement Supabase insert when ready
    */
   createUserProfile: async (user: User): Promise<User> => {
-    await delay(500);
-
-    // Dev Mode: Save via user.storage
-    if (DEV_MODE) {
-      setUser(user);
-    }
-
-    // TODO: Replace with Supabase insert
-    // const { data, error } = await supabase
-    //   .from('users')
-    //   .insert(user)
-    //   .select()
-    //   .single();
-    // if (error) throw error;
-    // return data;
-
-    return user;
+    const repo = getUserRepository();
+    return repo.createUserProfile(user);
   },
 };

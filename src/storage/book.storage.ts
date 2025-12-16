@@ -1,4 +1,4 @@
-import { Book } from "@/data/mockBooks";
+import { Book } from "@/types/book";
 import { getStorageItem, setStorageItem } from "@/utils/storage";
 
 const KEY = "reread_books";

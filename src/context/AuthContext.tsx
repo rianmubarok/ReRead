@@ -1,14 +1,14 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { User } from "@/types/user";
+import { Address, User } from "@/types/user";
 import { authService } from "@/services/auth.service";
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (name: string, avatar: string, address: any) => Promise<void>;
+  login: (name: string, avatar: string, address: Address) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => Promise<void>;
 }
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth();
   }, []);
 
-  const login = async (name: string, avatar: string, address: any) => {
+  const login = async (name: string, avatar: string, address: Address) => {
     setIsLoading(true);
     try {
       // authService.login now handles localStorage internally

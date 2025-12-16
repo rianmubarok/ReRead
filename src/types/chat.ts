@@ -4,8 +4,8 @@
  */
 
 import { User } from "./user";
-import { Book } from "@/data/mockBooks";
-import { User as MockUser } from "@/data/mockUsers";
+import { Book } from "./book";
+import type { MockUser } from "@/data/mockUsers";
 
 /**
  * Database schema types (what comes from Supabase)

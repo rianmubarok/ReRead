@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Book } from "@/data/mockBooks";
+import { Book } from "@/types/book";
 import { RiArrowRightSLine } from "@remixicon/react";
 
 interface ChatBookCardProps {

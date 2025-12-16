@@ -3,7 +3,8 @@
 import React, { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { RiArrowLeftLine } from "@remixicon/react";
-import { MOCK_BOOKS, Book } from "@/data/mockBooks";
+import { MOCK_BOOKS } from "@/data/mockBooks";
+import { Book } from "@/types/book";
 import BookCard from "@/components/home/BookCard";
 import CategoryFilter from "@/components/home/CategoryFilter";
 
