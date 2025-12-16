@@ -95,7 +95,13 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
         const districtName = addressData.districts.find(d => d.code === selectedDistrict)?.name || selectedDistrict;
         const villageName = addressData.villages.find(v => v.code === selectedVillage)?.name || selectedVillage;
 
-        await login(name, selectedAvatar, {
+        // If selectedAvatar is "google", try to use the actual URL we got from auth context (user.avatar)
+        // Otherwise use the selected asset name
+        const finalAvatar = selectedAvatar === "google" && user?.avatar
+          ? user.avatar
+          : selectedAvatar;
+
+        await login(name, finalAvatar, {
           province: provinceName,
           regency: regencyName,
           district: districtName,
