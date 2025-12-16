@@ -42,7 +42,7 @@ export default function BookmarksPage() {
                                             e.stopPropagation();
                                             handleRemoveBookmark(book.id);
                                         }}
-                                        className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-sm text-brand-red hover:bg-gray-100 transition-colors"
+                                        className="p-2 backdrop-blur-sm rounded-full text-brand-red hover:bg-gray-100 transition-colors"
                                     >
                                         <RiBookmarkFill className="w-5 h-5" />
                                     </button>

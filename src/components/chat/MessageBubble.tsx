@@ -57,7 +57,9 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, user, currentUse
                         </div>
 
                         {message.text && (
-                            <p className="text-sm opacity-90 mb-3 italic">"{message.text}"</p>
+                            <p className="text-sm opacity-90 mb-3">
+                                {message.text.replace(/^Permintaan konfirmasi:\s*/i, "")}
+                            </p>
                         )}
 
                         <div className="mt-2">
