@@ -3,12 +3,14 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Address, User } from "@/types/user";
 import { authService } from "@/services/auth.service";
+import { loginWithGoogleFirebase } from "@/services/auth.firebase.client";
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (name: string, avatar: string, address: Address) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => Promise<void>;
 }
@@ -51,6 +53,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithGoogle = async () => {
+    setIsLoading(true);
+    try {
+      const userData = await loginWithGoogleFirebase();
+      setUser(userData);
+    } catch (error) {
+      console.error("Google login failed:", error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     setIsLoading(true);
     try {
@@ -80,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated: !!user,
     isLoading,
     login,
+    loginWithGoogle,
     logout,
     updateUser,
   };

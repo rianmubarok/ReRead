@@ -3,6 +3,7 @@ import Image from "next/image";
 import GoogleIcon from "../icons/GoogleIcon";
 import Button from "@/components/ui/Button";
 import BottomContainer from "@/components/ui/BottomContainer";
+import { useAuth } from "@/context/AuthContext";
 
 interface WalkthroughProps {
   onFinish: () => void;
@@ -33,9 +34,11 @@ const steps = [
 ];
 
 export default function Walkthrough({ onFinish }: WalkthroughProps) {
+  const { loginWithGoogle } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [displayStep, setDisplayStep] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Handle step transition with animation
   useEffect(() => {
@@ -53,11 +56,26 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
     }
   }, [currentStep, displayStep]);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
-      onFinish();
+      // Last Step: trigger Google Login directly
+      setIsLoading(true);
+      try {
+        await loginWithGoogle();
+        onFinish();
+      } catch (error) {
+        console.error("Google login failed during walkthrough:", error);
+        // If failed, maybe just proceed to manual sign in or show error?
+        // Current flow: we want google login here. If it fails, we prob still go to sign in form but let's let success drive it.
+        // Actually, on successfully login, we proceed.
+        // If failure, we might want to manually fallback to onFinish() to show form? 
+        // For now let's assume if google fails, we fallback to manual form.
+        onFinish();
+      } finally {
+        setIsLoading(false);
+      }
     }
   };
 
@@ -130,19 +148,25 @@ export default function Walkthrough({ onFinish }: WalkthroughProps) {
 
       {/* Navigation & Controls */}
       <BottomContainer>
-        <Button
-          onClick={handleNext}
-          variant={currentStep === steps.length - 1 ? "outline" : "primary"}
-          fullWidth
-          className="flex items-center justify-center gap-3"
-        >
-          {currentStep === steps.length - 1 && (
-            <GoogleIcon className="w-6 h-6" />
-          )}
-          {currentStep === steps.length - 1
-            ? "Masuk Menggunakan Google"
-            : "Lanjut"}
-        </Button>
+        {currentStep === steps.length - 1 ? (
+          <button
+            onClick={handleNext}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-2 border border-brand-gray/30 rounded-xl py-3 text-sm font-medium hover:bg-gray-50 active:scale-[0.98] transition disabled:opacity-60 text-brand-black"
+          >
+            <GoogleIcon className="w-5 h-5" />
+            {isLoading ? "Menghubungkan..." : "Masuk dengan Google"}
+          </button>
+        ) : (
+          <Button
+            onClick={handleNext}
+            variant="primary"
+            fullWidth
+            className="flex items-center justify-center gap-3"
+          >
+            Lanjut
+          </Button>
+        )}
       </BottomContainer>
     </div>
   );

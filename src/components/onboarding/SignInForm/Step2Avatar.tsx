@@ -5,11 +5,13 @@ import { AVATARS } from "./constants";
 interface Step2AvatarProps {
   selectedAvatar: string;
   onAvatarChange: (avatar: string) => void;
+  googleAvatarUrl?: string;
 }
 
 export default function Step2Avatar({
   selectedAvatar,
   onAvatarChange,
+  googleAvatarUrl,
 }: Step2AvatarProps) {
   return (
     <div className="animate-fade-in space-y-8">
@@ -28,9 +30,19 @@ export default function Step2Avatar({
         <div className="w-40 h-40 bg-white rounded-full flex items-center justify-center relative overflow-hidden transition-all duration-300">
           <div className="w-full h-full relative">
             {selectedAvatar === "google" ? (
-              <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                <span className="text-4xl text-gray-400 font-bold">G</span>
-              </div>
+              // If google is selected, try to show the actual google url, else fallback to 'G'
+              googleAvatarUrl && googleAvatarUrl !== "google" ? (
+                <Image
+                  src={googleAvatarUrl}
+                  alt="Google Avatar"
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                  <span className="text-4xl text-gray-400 font-bold">G</span>
+                </div>
+              )
             ) : (
               <Image
                 src={`/assets/avatar/${selectedAvatar}`}
@@ -55,7 +67,16 @@ export default function Step2Avatar({
             }
           `}
         >
-          <span className="text-brand-gray font-medium">G</span>
+          {googleAvatarUrl && googleAvatarUrl !== "google" ? (
+            <Image
+              src={googleAvatarUrl}
+              alt="Google"
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <span className="text-brand-gray font-medium">G</span>
+          )}
         </button>
 
         {/* Slots 2-10: Asset Avatars */}

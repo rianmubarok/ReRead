@@ -14,13 +14,21 @@ interface SignInFormProps {
 }
 
 export default function SignInForm({ onFinish }: SignInFormProps) {
-  const { login } = useAuth();
+  const { login, loginWithGoogle, user } = useAuth();
   const [step, setStep] = useState(1);
   const [displayStep, setDisplayStep] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [name, setName] = useState("");
   const [selectedAvatar, setSelectedAvatar] = useState<string>("google");
   const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  // Pre-fill name from Google account if available
+  useEffect(() => {
+    if (user?.name && !name) {
+      setName(user.name);
+    }
+  }, [user, name]);
 
   const addressData = useAddressData();
   const {
@@ -29,6 +37,19 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
     selectedDistrict,
     selectedVillage,
   } = addressData;
+
+  const handleGoogleLogin = async () => {
+    setIsGoogleLoading(true);
+    try {
+      await loginWithGoogle();
+      onFinish();
+    } catch (error: any) {
+      console.error("Google Login Error", error);
+      toast.error(error?.message || "Gagal masuk dengan Google");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
 
   // Handle step transition with animation
   useEffect(() => {
@@ -130,6 +151,7 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
             <Step2Avatar
               selectedAvatar={selectedAvatar}
               onAvatarChange={setSelectedAvatar}
+              googleAvatarUrl={user?.avatar}
             />
           )}
 

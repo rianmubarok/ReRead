@@ -20,7 +20,7 @@ export default function OwnerInfo({ owner }: OwnerInfoProps) {
 
     const displayLocation = isMe && user?.address
         ? `${user.address.district}, ${user.address.regency}`
-        : owner.location;
+        : owner.locationLabel;
 
     return (
         <div className="flex items-center justify-between">
@@ -29,7 +29,7 @@ export default function OwnerInfo({ owner }: OwnerInfoProps) {
                 <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 border border-gray-100">
                     {owner.avatar && owner.avatar !== 'google' ? (
                         <Image
-                            src={`/assets/avatar/${owner.avatar}`}
+                            src={owner.avatar.startsWith('http') ? owner.avatar : `/assets/avatar/${owner.avatar}`}
                             alt={owner.name}
                             fill
                             className="object-cover"

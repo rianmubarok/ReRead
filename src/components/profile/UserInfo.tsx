@@ -18,7 +18,7 @@ export default function UserInfo({ user }: UserInfoProps) {
             <div className="relative w-24 h-24 rounded-full overflow-hidden border-2 border-white shadow-lg mb-4 bg-gray-200">
                 {user.avatar && user.avatar !== 'google' ? (
                     <Image
-                        src={`/assets/avatar/${user.avatar}`}
+                        src={user.avatar.startsWith('http') ? user.avatar : `/assets/avatar/${user.avatar}`}
                         alt={user.name}
                         fill
                         className="object-cover"

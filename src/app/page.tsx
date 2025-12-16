@@ -39,7 +39,7 @@ export default function Home() {
     if (!isInitialized) {
       setIsInitialized(true);
 
-      // If authenticated, skip everything immediately
+      // 1. Authenticated AND Onboarding Completed -> Go to Home
       if (isAuthenticated && user?.onboardingCompleted) {
         setShowSplash(false);
         setShowWalkthrough(false);
@@ -48,7 +48,16 @@ export default function Home() {
         return;
       }
 
-      // If not authenticated, start onboarding with splash
+      // 2. Authenticated BUT Onboarding NOT Completed (e.g. New Google User) -> Go to Sign In Form
+      if (isAuthenticated && !user?.onboardingCompleted) {
+        setShowSplash(false);
+        setShowWalkthrough(false);
+        setShowSignIn(true);
+        setVisible(false);
+        return;
+      }
+
+      // 3. Not Authenticated -> Start Onboarding (Splash)
       if (!isAuthenticated) {
         setShowSplash(true);
         setVisible(false);

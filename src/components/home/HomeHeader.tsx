@@ -32,7 +32,7 @@ export default function HomeHeader({ user }: HomeHeaderProps) {
                         <div className="relative w-10 h-10 rounded-full overflow-hidden">
                             {user?.avatar && user.avatar !== 'google' ? (
                                 <Image
-                                    src={`/assets/avatar/${user.avatar}`}
+                                    src={user.avatar.startsWith('http') ? user.avatar : `/assets/avatar/${user.avatar}`}
                                     alt={user.name}
                                     fill
                                     className="object-cover"

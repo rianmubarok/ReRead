@@ -31,7 +31,7 @@ export default function ChatListItem({ chat }: ChatListItemProps) {
                 ) : (
                     <div className="relative w-full h-full">
                         <Image
-                            src={`/assets/avatar/${chat.user.avatar}`}
+                            src={(chat.user.avatar && chat.user.avatar.startsWith('http')) ? chat.user.avatar : `/assets/avatar/${chat.user.avatar || 'default.png'}`}
                             alt={chat.user.name}
                             fill
                             className="object-cover"

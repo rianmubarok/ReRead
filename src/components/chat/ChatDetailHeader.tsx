@@ -38,7 +38,7 @@ const ChatDetailHeader: React.FC<ChatDetailHeaderProps> = ({ name, status, avata
 
                 <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gray-200">
                     <img
-                        src={avatar === 'google' ? '/assets/avatars/google-avatar.png' : `/assets/avatar/${avatar}`}
+                        src={avatar === 'google' ? '/assets/avatars/google-avatar.png' : (avatar.startsWith('http') ? avatar : `/assets/avatar/${avatar}`)}
                         alt={name}
                         className="w-full h-full object-cover"
                         onError={(e) => {

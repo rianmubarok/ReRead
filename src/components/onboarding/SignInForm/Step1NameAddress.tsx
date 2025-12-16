@@ -3,6 +3,8 @@ import UserIcon from "@/components/icons/UserIcon";
 import SearchableDropdown from "@/components/ui/SearchableDropdown";
 import { UseAddressDataReturn } from "./hooks/useAddressData";
 
+import GoogleIcon from "@/components/icons/GoogleIcon";
+
 interface Step1NameAddressProps {
   name: string;
   onNameChange: (name: string) => void;
@@ -45,6 +47,7 @@ export default function Step1NameAddress({
 
       {/* Form */}
       <div className="space-y-8">
+
         {/* Nama Lengkap */}
         <div>
           <p className="text-sm text-brand-black font-medium mb-4">
