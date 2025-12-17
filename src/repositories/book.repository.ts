@@ -136,8 +136,8 @@ const mapToBook = (data: any): Book => {
   const user = data.users || {};
 
   const owner: User = {
-    id: user.uid || user.id || "",
-    uid: user.uid || "",
+    id: user.id || "",  // Supabase UUID
+    uid: user.uid || "",  // Firebase UID
     name: user.name || "Unknown",
     email: user.email,
     avatar: user.avatar,
