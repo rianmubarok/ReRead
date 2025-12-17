@@ -9,6 +9,7 @@ import { supabase } from "@/lib/supabase";
 import { getBookRepository } from "@/repositories/book.repository";
 import { User, Address } from "@/types/user";
 import { Book } from "@/types/book";
+import { getTransactionRepository } from "@/repositories/transaction.repository";
 
 // Helper to format date
 const formatDate = (dateString?: string) => {
@@ -28,6 +29,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
     // State for Real Data
     const [user, setUser] = useState<User | null>(null);
     const [userBooks, setUserBooks] = useState<Book[]>([]);
+    const [exchangeCount, setExchangeCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
@@ -70,21 +72,12 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
                     setUser(fetchedUser);
 
                     // 2. Fetch User Books
-                    // Note: getBooksByOwner currently expects ownerId (which column?)
-                    // The repo usually queries by owner_id column in books table.
-                    // If book.owner_id is storing UUID, we should pass fetchedUser.id (UUID).
-                    // If book.owner_id is storing UID, we should pass fetchedUser.uid.
-                    // Based on recent changes, we prioritize UID for consitency, but let's check repo.
-                    // BookRepository typically uses eq('owner_id', userId).
-                    // Let's pass the ID we used to find the user to be safe, or just pass fetchedUser.uid if we migrated?
-                    // Let's pass fetchedUser.uid assuming books relation uses the same ID type as our user lookup if possible,
-                    // but DB schema probably links via UUID foreign key.
-                    // Let's try UUID first as books table relation is typically uuid.
                     const books = await getBookRepository().getBooksByOwner(fetchedUser.id);
-
-                    // Filter available only? OR show all active?
-                    // Usually profile shows available books.
                     setUserBooks(books.filter(b => !b.status || b.status === "Available"));
+
+                    // 3. Fetch Exchange Count
+                    const tx = await getTransactionRepository().getTransactionsByUserId(fetchedUser.uid);
+                    setExchangeCount(tx.length);
                 }
             } catch (error) {
                 console.error("Failed to fetch profile:", error);
@@ -163,7 +156,7 @@ export default function UserProfilePage({ params }: { params: Promise<{ id: stri
                         </div>
                         <div className="w-[1px] h-8 bg-gray-200"></div>
                         <div>
-                            <span className="text-xl font-bold text-brand-black block">-</span>
+                            <span className="text-xl font-bold text-brand-black block">{exchangeCount}</span>
                             <span className="text-xs text-gray-500 leading-tight block">Pertukaran<br />Sukses</span>
                         </div>
                     </div>

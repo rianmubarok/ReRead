@@ -32,5 +32,5 @@ export interface Book {
   locationLabel?: string;
   distanceLabel?: string;
   coordinates?: User["coordinates"];
-  status?: "Available" | "Archived";
+  status?: "Available" | "Archived" | "Exchanged";
 }

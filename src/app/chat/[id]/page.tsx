@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import ChatDetailHeader from "@/components/chat/ChatDetailHeader";
 import ChatInput from "@/components/chat/ChatInput";
 import BookContextPanel from "@/components/chat/BookContextPanel";
@@ -14,10 +14,12 @@ import { useAuth } from "@/context/AuthContext";
 import toast from "react-hot-toast";
 import { getChatRepository } from "@/repositories/chat.repository";
 import { getBookRepository } from "@/repositories/book.repository";
+import { getTransactionRepository } from "@/repositories/transaction.repository";
 
 export default function ChatDetailPage() {
   const { setVisible } = useNav();
   const { user: currentUser } = useAuth();
+  const router = useRouter();
   const params = useParams();
   const searchParams = useSearchParams();
   const paramId = params?.id as string; // Could be ChatID or UserID
@@ -138,7 +140,7 @@ export default function ChatDetailPage() {
   }, [messages]);
 
 
-  const handleSendMessage = async (text: string) => {
+  const handleSendMessage = async (text: string, options?: any) => {
     if (!text.trim() || !thread || !currentUser?.uid) return;
 
     // Optimistic Update
@@ -149,7 +151,9 @@ export default function ChatDetailPage() {
       senderId: currentUser.uid,
       timestamp: new Date(),
       bookId: showBookContext ? contextBook?.id : undefined,
-      isRead: false
+      isRead: false,
+      messageType: options?.messageType,
+      exchangeRequest: options?.metadata?.exchangeRequest
     };
     setMessages(prev => [...prev, optimMsg]);
 
@@ -159,7 +163,8 @@ export default function ChatDetailPage() {
         text,
         currentUser.uid,
         {
-          bookId: showBookContext ? contextBook?.id : undefined
+          bookId: showBookContext ? contextBook?.id : undefined,
+          ...options
         }
       );
 
@@ -177,11 +182,83 @@ export default function ChatDetailPage() {
   };
 
   // Handle Exchange Actions (Accept/Refuse/Cancel) via Messages
+  // Handle Exchange Actions (Accept/Refuse/Cancel) via Messages
   const handleAction = async (action: string, messageId: string) => {
-    // Implementation for confirming exchange would update metadata in DB
-    // Not yet implemented in repository fully (need updateMessage method)
-    // For now, show toast
-    toast("Fitur update status pengajuan akan segera hadir!");
+    if (!thread || !currentUser) return;
+
+    const message = messages.find(m => m.id === messageId);
+    if (!message || !message.exchangeRequest) return;
+
+    if (action === 'confirm_exchange') {
+      const loadingToast = toast.loading("Memproses pertukaran...");
+      try {
+        const req = message.exchangeRequest;
+        const requesterId = message.senderId;
+        const responderId = currentUser.uid;
+
+        // 1. Mark Books as Exchanged
+        // Requester is the one who sent the request (Owner of Book A)
+        // Responder is the one accepting (Owner of Book B - if barter)
+        // However, verify logic:
+        // If Exchange Request sent by Owner A. Text: "Complete Exchange?"
+        // B accepts.
+        // A owns Book A. B owns Book B (barter).
+        const successA = await getBookRepository().markAsExchanged(req.bookId, requesterId);
+        let successB = true;
+
+        if (req.barterBookId) {
+          // Barter book is owned by the responder (the partner)
+          successB = await getBookRepository().markAsExchanged(req.barterBookId, responderId);
+        }
+
+        if (!successA || !successB) {
+          toast.error("Gagal update status buku via RPC database.", { id: loadingToast });
+          return;
+        }
+
+        // 2. Create Transaction History
+        await getTransactionRepository().createTransaction({
+          requesterId,
+          responderId,
+          bookId: req.bookId,
+          barterBookId: req.barterBookId,
+
+          status: 'completed'
+        });
+
+        // 3. Update Message Status
+        await getChatRepository().updateMessageMetadata(messageId, {
+          exchangeRequest: { ...req, status: 'completed' }
+        });
+
+        // 4. Update UI
+        setMessages(prev => prev.map(m => m.id === messageId ? {
+          ...m,
+          exchangeRequest: { ...req, status: 'completed' }
+        } : m));
+
+        toast.success("Pertukaran berhasil!", { id: loadingToast });
+
+      } catch (error) {
+        console.error("Exchange Error:", error);
+        toast.error("Terjadi kesalahan saat memproses pertukaran.", { id: loadingToast });
+      }
+    } else if (action === 'cancel_exchange') {
+      // Cancel logic (Update status only)
+      try {
+        const req = message.exchangeRequest;
+        await getChatRepository().updateMessageMetadata(messageId, {
+          exchangeRequest: { ...req, status: 'cancelled' }
+        });
+        setMessages(prev => prev.map(m => m.id === messageId ? {
+          ...m,
+          exchangeRequest: { ...req, status: 'cancelled' }
+        } : m));
+        toast.success("Pengajuan dibatalkan");
+      } catch (e) {
+        toast.error("Gagal membatalkan");
+      }
+    }
   };
 
   if (isLoading || !currentUser) {
@@ -258,8 +335,10 @@ export default function ChatDetailPage() {
           <div>
             <BookContextPanel
               book={contextBook}
+              isOwner={contextBook.owner.uid === currentUser?.uid || contextBook.owner.id === currentUser?.uid}
+              onOpenExchangePage={() => router.push(`/chat/${thread?.id}/complete-exchange`)}
               onClose={() => setShowBookContext(false)}
-              onSendMessage={handleSendMessage} // Simple string send for now
+              onSendMessage={handleSendMessage}
             />
           </div>
         )}

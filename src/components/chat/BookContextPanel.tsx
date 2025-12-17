@@ -4,11 +4,19 @@ import { RiCloseFill, RiArrowDownSLine } from "@remixicon/react";
 
 interface BookContextPanelProps {
     book: Book;
+    isOwner: boolean;
     onClose: () => void;
-    onSendMessage: (text: string) => void;
+    onSendMessage: (text: string, options?: any) => void;
+    onOpenExchangePage: () => void;
 }
 
-const BookContextPanel: React.FC<BookContextPanelProps> = ({ book, onClose, onSendMessage }) => {
+const BookContextPanel: React.FC<BookContextPanelProps> = ({
+    book,
+    isOwner,
+    onClose,
+    onSendMessage,
+    onOpenExchangePage
+}) => {
     const quickActions = [
         "Masih Tersedia?",
         "Info Harga?",
@@ -23,7 +31,7 @@ const BookContextPanel: React.FC<BookContextPanelProps> = ({ book, onClose, onSe
     const [showActions, setShowActions] = React.useState(true);
 
     return (
-        <div className="bg-white p-4 pb-0 animate-slide-up">
+        <div className="bg-white p-4 pb-0 animate-slide-up border-t border-gray-100 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
             <div className="flex items-start justify-between mb-4">
                 <div className="flex gap-3">
                     <div className="w-12 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
@@ -42,9 +50,15 @@ const BookContextPanel: React.FC<BookContextPanelProps> = ({ book, onClose, onSe
                         <h4 className="font-semibold text-sm text-gray-900 truncate mb-0.5">
                             {book.title}
                         </h4>
-                        <p className="text-xs text-gray-500 truncate">
+                        <p className="text-xs text-gray-500 truncate mt-0.5">
                             {book.author}
                         </p>
+
+                        {isOwner && (
+                            <span className="text-[10px] text-gray-400 mt-1 block">
+                                Anda pemilik buku ini
+                            </span>
+                        )}
                     </div>
                 </div>
                 <button
@@ -56,16 +70,37 @@ const BookContextPanel: React.FC<BookContextPanelProps> = ({ book, onClose, onSe
             </div>
 
             {showActions && (
-                <div className="grid grid-cols-2 gap-2 mb-2 animate-fade-in">
-                    {quickActions.map((action) => (
-                        <button
-                            key={action}
-                            onClick={() => onSendMessage(action)}
-                            className="bg-brand-red/5 text-brand-red hover:bg-brand-red hover:text-white text-xs font-medium py-2.5 px-4 rounded-xl transition-all duration-200 border border-brand-red/10"
-                        >
-                            {action}
-                        </button>
-                    ))}
+                <div className="mb-2 animate-fade-in">
+                    {/* Owner View: Actions */}
+                    {isOwner ? (
+                        <div className="space-y-2">
+                            {(!book.status || book.status === 'Available') ? (
+                                <button
+                                    onClick={onOpenExchangePage}
+                                    className="w-full bg-green-600 text-white hover:bg-green-700 text-sm font-bold py-3 px-4 rounded-xl transition-all duration-200 shadow-sm flex items-center justify-center gap-2"
+                                >
+                                    <span>Tandai Selesai / Tukar</span>
+                                </button>
+                            ) : (
+                                <div className="text-center p-3 bg-gray-50 rounded-xl text-xs text-gray-500">
+                                    Status buku ini sudah selesai/diarsipkan.
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        /* Seeker View: Quick Questions */
+                        <div className="grid grid-cols-2 gap-2">
+                            {quickActions.map((action) => (
+                                <button
+                                    key={action}
+                                    onClick={() => onSendMessage(action)}
+                                    className="bg-brand-red/5 text-brand-red hover:bg-brand-red hover:text-white text-xs font-medium py-2.5 px-4 rounded-xl transition-all duration-200 border border-brand-red/10"
+                                >
+                                    {action}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
 

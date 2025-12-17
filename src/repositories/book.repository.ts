@@ -28,6 +28,7 @@ export interface BookRepository {
   toggleBookmark(bookId: string, userId: string): Promise<boolean>; // returns isBookmarked state
   isBookmarked(bookId: string, userId: string): Promise<boolean>;
   getBookmarks(userId: string): Promise<Book[]>;
+  markAsExchanged(bookId: string, userId: string): Promise<boolean>;
 }
 
 class MockBookRepository implements BookRepository {
@@ -120,6 +121,14 @@ class MockBookRepository implements BookRepository {
     const books = getBooks();
     return books.filter(b => this._bookmarks.has(`${userId}:${b.id}`));
   }
+
+  async markAsExchanged(bookId: string, userId: string): Promise<boolean> {
+    await maybeDelay(300);
+    const book = getBookById(bookId);
+    if (!book) return false;
+    updateBookStorage(bookId, { status: 'Exchanged' });
+    return true;
+  }
 }
 
 const mapToBook = (data: any): Book => {
@@ -166,6 +175,7 @@ class SupabaseBookRepository implements BookRepository {
     const { data, error } = await supabase
       .from("books")
       .select("*, users(*)")
+      .eq("status", "Available")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -197,6 +207,7 @@ class SupabaseBookRepository implements BookRepository {
     let query = supabase
       .from("books")
       .select("*, users(*)")
+      .eq("status", "Available")
       .order("created_at", { ascending: false });
 
     if (category !== "Semua") {
@@ -214,10 +225,23 @@ class SupabaseBookRepository implements BookRepository {
   async getBooksByOwner(ownerId: string): Promise<Book[]> {
     if (!supabase) return [];
 
+    let targetId = ownerId;
+    // Simple UUID regex check
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(ownerId);
+
+    if (!isUUID) {
+      const { data: u } = await supabase.from('users').select('id').eq('uid', ownerId).single();
+      if (u) {
+        targetId = u.id;
+      } else {
+        console.warn(`getBooksByOwner: Could not resolve UID ${ownerId} to UUID. Trying query with original ID.`);
+      }
+    }
+
     const { data, error } = await supabase
       .from("books")
       .select("*, users(*)")
-      .eq("owner_id", ownerId)
+      .eq("owner_id", targetId)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -234,6 +258,7 @@ class SupabaseBookRepository implements BookRepository {
     const { data, error } = await supabase
       .from("books")
       .select("*, users(*)")
+      .eq("status", "Available")
       .order("created_at", { ascending: false })
       .limit(10);
 
@@ -371,6 +396,7 @@ class SupabaseBookRepository implements BookRepository {
     const { data, error } = await supabase
       .from("books")
       .select("*, users(*)")
+      .eq("status", "Available")
       .or(`title.ilike.%${query}%,author.ilike.%${query}%`)
       .order("created_at", { ascending: false });
 
@@ -429,6 +455,19 @@ class SupabaseBookRepository implements BookRepository {
     // data is array of { book: { ...bookData, users: {...userData} } }
     const books = data.map((item: any) => mapToBook(item.book)).filter(b => !!b);
     return books;
+  }
+
+  async markAsExchanged(bookId: string, userId: string): Promise<boolean> {
+    if (!supabase) return false;
+    const { data, error } = await supabase.rpc('complete_book_exchange', {
+      p_book_id: bookId,
+      p_user_id: userId
+    });
+    if (error) {
+      console.error("Mark as exchanged failed", error);
+      return false;
+    }
+    return data?.success || false;
   }
 }
 

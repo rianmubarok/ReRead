@@ -50,6 +50,9 @@ export interface ChatMessage {
     bookTitle: string;
     bookImage: string;
     status: "pending" | "completed" | "cancelled";
+    exchangeType?: string;
+    barterBookId?: string;
+    type?: string;
   };
 }
 
@@ -88,6 +91,9 @@ export interface LegacyMessage {
     bookTitle: string;
     bookImage: string;
     status: "pending" | "completed" | "cancelled";
+    exchangeType?: string;
+    barterBookId?: string;
+    type?: string;
   };
 }
 

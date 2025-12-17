@@ -8,48 +8,75 @@ import {
   RiExchangeDollarLine,
   RiCheckDoubleLine,
 } from "@remixicon/react";
-import { MOCK_BOOKS } from "@/data/mockBooks";
-import { MOCK_USERS } from "@/data/mockUsers";
-import {
-  getExchangeHistory,
-  ExchangeHistoryItem,
-} from "@/storage/exchange.storage";
+import { useAuth } from "@/context/AuthContext";
+import { getTransactionRepository, ExchangeTransaction } from "@/repositories/transaction.repository";
+import { getBookRepository } from "@/repositories/book.repository";
+import { supabase } from "@/lib/supabase";
 
-interface HistoryWithRelations extends ExchangeHistoryItem {
+interface HistoryWithRelations extends ExchangeTransaction {
   bookTitle: string;
-  bookImage: string;
+  bookImage?: string;
   partnerName: string;
+  note?: string; // Add note if transaction has it, though current SQL doesn't store note prominently yet.
 }
 
 export default function StatsPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [items, setItems] = useState<HistoryWithRelations[]>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const raw = getExchangeHistory();
+    const fetchHistory = async () => {
+      if (!user) return;
+      setIsLoading(true);
+      try {
+        const transactions = await getTransactionRepository().getTransactionsByUserId(user.uid);
 
-    const mapped: HistoryWithRelations[] = raw
-      .map((item) => {
-        const book = MOCK_BOOKS.find((b) => b.id === item.bookId);
-        const partner = MOCK_USERS.find((u) => u.id === item.partnerId);
-        if (!book || !partner) return null;
+        // Enrich data
+        const enriched = await Promise.all(transactions.map(async (t) => {
+          // 1. Get Book
+          const book = await getBookRepository().getBookById(t.bookId);
 
-        return {
-          ...item,
-          bookTitle: book.title,
-          bookImage: book.image,
-          partnerName: partner.name,
-        };
-      })
-      .filter((v): v is HistoryWithRelations => v !== null)
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+          // 2. Get Partner
+          const partnerId = t.requesterId === user.uid ? t.responderId : t.requesterId;
 
-    setItems(mapped);
-  }, []);
+          // Fetch simple name
+          let partnerName = "Pengguna";
+          if (supabase) {
+            const { data: u } = await supabase.from('users').select('name').eq('uid', partnerId).single();
+            if (u) partnerName = u.name;
+          }
+
+          return {
+            ...t,
+            bookTitle: book?.title || "Buku Tidak Dikenal",
+            bookImage: book?.image,
+            partnerName: partnerName,
+          } as HistoryWithRelations;
+        }));
+
+        setItems(enriched);
+      } catch (e) {
+        console.error("Failed to load history", e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchHistory();
+    }
+  }, [user]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-brand-white flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-gray-200 border-t-brand-black rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-brand-white pb-24 animate-fade-in">
@@ -138,34 +165,27 @@ export default function StatsPage() {
                   </div>
 
                   <p className="text-xs text-brand-gray mb-2">
-                    Buku dari{" "}
+                    {user?.uid === item.requesterId ? "Ditukar dengan " : "Buku dari "}
                     <span className="text-brand-black font-medium">
                       {item.partnerName}
                     </span>
                   </p>
 
                   {expandedId === item.id && (
-                    <div className="mt-2 space-y-1 text-xs text-brand-gray">
+                    <div className="mt-2 space-y-1 text-xs text-brand-gray animate-fade-in">
                       <p>
                         <span className="font-semibold text-brand-black">
-                          Buku:
+                          ID Transaksi:
                         </span>{" "}
-                        {item.bookTitle}
+                        {item.id.slice(0, 8)}...
                       </p>
                       <p>
                         <span className="font-semibold text-brand-black">
-                          Pihak pemilik buku:
+                          Status:
                         </span>{" "}
-                        {item.partnerName}
+                        <span className="capitalize">{item.status}</span>
                       </p>
-                      {item.note && (
-                        <p>
-                          <span className="font-semibold text-brand-black">
-                            Catatan:
-                          </span>{" "}
-                          {item.note}
-                        </p>
-                      )}
+
                     </div>
                   )}
                 </div>

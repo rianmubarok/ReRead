@@ -1,9 +1,8 @@
-"use client";
-
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { User } from "@/types/user";
-import { RiMapPinLine, RiPencilLine } from "@remixicon/react";
+import { RiMapPinLine, RiPencilLine, RiEyeLine } from "@remixicon/react";
 
 interface UserInfoProps {
     user: User | null;
@@ -39,11 +38,20 @@ export default function UserInfo({ user }: UserInfoProps) {
                 </div>
             )}
 
-            {/* Edit Button */}
-            <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full text-sm font-medium text-brand-black hover:bg-gray-200 transition-colors">
-                <RiPencilLine className="w-4 h-4" />
-                Edit Profil
-            </button>
+            {/* Edit & View Buttons */}
+            <div className="flex gap-3">
+                <button className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-full text-sm font-medium text-brand-black hover:bg-gray-200 transition-colors">
+                    <RiPencilLine className="w-4 h-4" />
+                    Edit Profil
+                </button>
+                <Link
+                    href={`/profile/${user.uid}`}
+                    className="flex items-center gap-2 px-4 py-2 bg-brand-black text-white rounded-full text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm"
+                >
+                    <RiEyeLine className="w-4 h-4" />
+                    Lihat Profil
+                </Link>
+            </div>
         </div>
     );
 }

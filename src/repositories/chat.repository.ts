@@ -20,6 +20,7 @@ export interface ChatRepository {
   createChatThread(targetUserId: string, currentUserId: string, bookId?: string): Promise<ChatThread>;
   markAsRead(chatId: string, currentUserId: string): Promise<void>;
   getTotalUnreadCount(currentUserId: string): Promise<number>;
+  updateMessageMetadata(messageId: string, metadata: any): Promise<boolean>;
 }
 
 // Local helper to map book data from join
@@ -71,6 +72,9 @@ class MockChatRepository implements ChatRepository {
   async getTotalUnreadCount(currentUserId: string): Promise<number> {
     return 0;
   }
+  async updateMessageMetadata(messageId: string, metadata: any): Promise<boolean> {
+    return true;
+  }
 }
 
 class SupabaseChatRepository implements ChatRepository {
@@ -105,8 +109,8 @@ class SupabaseChatRepository implements ChatRepository {
 
     if (!data || data.length === 0) return [];
 
-    // Filter empty threads (hide created but empty chats)
-    const validThreads = data.filter(t => t.last_message && t.last_message.trim().length > 0);
+    // Show all threads, even if no message yet (e.g. freshly created or RLS update failed)
+    const validThreads = data;
 
     if (validThreads.length === 0) return [];
 
@@ -131,15 +135,13 @@ class SupabaseChatRepository implements ChatRepository {
       });
     }
 
-    // 4. Combine
+    // 4. Combine - Use map directly, no filter null
     return validThreads.map(thread => {
       const isUserA = thread.user_a === currentUserId;
       const partnerId = isUserA ? thread.user_b : thread.user_a;
       const partner = userMap[partnerId];
 
-      if (!partner) return null;
-
-      const user: User = {
+      const user: User = partner ? {
         id: partner.uid || partner.id,
         uid: partner.uid,
         name: partner.name,
@@ -148,17 +150,24 @@ class SupabaseChatRepository implements ChatRepository {
         coordinates: partner.coordinates,
         onboardingCompleted: partner.onboarding_completed,
         isVerified: partner.is_verified,
-      };
+      } : {
+        id: partnerId,
+        uid: partnerId,
+        name: "Pengguna Tidak Dikenal",
+        avatar: "",
+        onboardingCompleted: false,
+        isVerified: false,
+      } as User;
 
       return {
         id: thread.id,
         user,
-        lastMessage: thread.last_message || "",
-        timestamp: thread.last_message_at,
+        lastMessage: thread.last_message || "Percakapan baru",
+        timestamp: thread.last_message_at || thread.created_at,
         unreadCount: unreadMap.get(thread.id) || 0,
         bookContext: undefined,
       };
-    }).filter(t => t !== null) as ChatThread[];
+    });
   }
 
   async getChatThread(chatIdOrUserId: string, currentUserId: string): Promise<ChatThread | null> {
@@ -371,6 +380,20 @@ class SupabaseChatRepository implements ChatRepository {
 
     if (error) return 0;
     return count || 0;
+  }
+
+  async updateMessageMetadata(messageId: string, metadata: any): Promise<boolean> {
+    if (!supabase) return false;
+    const { error } = await supabase
+      .from('chat_messages')
+      .update({ metadata: metadata })
+      .eq('id', messageId);
+
+    if (error) {
+      console.error("Failed to update message metadata", error);
+      return false;
+    }
+    return true;
   }
 }
 

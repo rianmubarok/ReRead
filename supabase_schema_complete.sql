@@ -1,9 +1,8 @@
 -- =====================================================================================
--- SUPABASE SCHEMA COMPLETE (Users, Books, Bookmarks, Chats, Storage & Functions)
+-- SUPABASE SCHEMA COMPLETE (Users, Books, Bookmarks, Chats, Transactions, Storage & Functions)
 -- =====================================================================================
--- Note: Skema ini menggunakan pendekatan RLS yang PERMISIF (Public Access Allowed)
--- untuk mengakomodasi Hybrid Auth (Firebase Frontend + Supabase DB) tanpa sinkronisasi token.
--- Untuk production, harap perketat RLS dan gunakan mekanisme auth yang sesuai.
+-- This schema integrates all features: Users, Books, Chats, History/Transactions.
+-- RLS is set to PERMISSIVE (Public Access) for Hybrid Auth compatibility.
 -- =====================================================================================
 
 -- 1. UTILITIES & EXTENSIONS
@@ -47,6 +46,7 @@ for each row execute function public.set_updated_at();
 
 -- RLS Users (Permissive)
 alter table public.users enable row level security;
+drop policy if exists "Enable access for all users" on public.users;
 create policy "Enable access for all users" on public.users for all using (true) with check (true);
 
 
@@ -77,9 +77,9 @@ create table if not exists public.books (
   updated_at timestamptz not null default now()
 );
 
--- Status Constraint
+-- Status Constraint (Updated to include 'Exchanged')
 ALTER TABLE public.books DROP CONSTRAINT IF EXISTS books_status_check;
-ALTER TABLE public.books ADD CONSTRAINT books_status_check CHECK (status IN ('Available', 'Archived'));
+ALTER TABLE public.books ADD CONSTRAINT books_status_check CHECK (status IN ('Available', 'Archived', 'Exchanged'));
 
 -- Indexes
 create index if not exists idx_books_owner on public.books(owner_id);
@@ -93,6 +93,7 @@ for each row execute function public.set_updated_at();
 
 -- RLS Books
 alter table public.books enable row level security;
+drop policy if exists "Books all public" on public.books;
 create policy "Books all public" on public.books for all using (true) with check (true);
 
 
@@ -119,6 +120,7 @@ create table if not exists public.bookmarks (
 
 -- RLS Bookmarks
 alter table public.bookmarks enable row level security;
+drop policy if exists "Bookmarks all public" on public.bookmarks;
 create policy "Bookmarks all public" on public.bookmarks for all using (true) with check (true);
 
 
@@ -137,7 +139,6 @@ CREATE TABLE IF NOT EXISTS public.chat_threads (
 );
 
 -- Fix Foreign Key Constraints for PostgREST Join (PENTING)
--- Kita memastikan nama constraint manual agar konsisten
 DO $$ 
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.table_constraints WHERE constraint_name = 'chat_threads_user_a_fkey') THEN
@@ -178,17 +179,44 @@ CREATE TABLE IF NOT EXISTS public.chat_messages (
 CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON public.chat_messages(chat_id);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON public.chat_messages(created_at);
 
--- RLS Chats
+-- RLS Chats (Explicit Permissive for Fix)
 ALTER TABLE public.chat_threads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chat_messages ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Public Chat Threads" ON public.chat_threads FOR ALL USING (true);
-CREATE POLICY "Public Chat Messages" ON public.chat_messages FOR ALL USING (true);
+
+DROP POLICY IF EXISTS "Public Chat Threads" ON public.chat_threads;
+CREATE POLICY "Public Chat Threads" ON public.chat_threads FOR ALL TO public USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Public Chat Messages" ON public.chat_messages;
+CREATE POLICY "Public Chat Messages" ON public.chat_messages FOR ALL TO public USING (true) WITH CHECK (true);
 
 
--- 8. FUNCTIONS (RPC)
+-- 8. EXCHANGE TRANSACTION HISTORY
+-- =====================================================================================
+DROP TABLE IF EXISTS public.exchange_transactions;
+CREATE TABLE public.exchange_transactions (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    requester_id TEXT NOT NULL, -- UID of the person who requested (sender of the exchange message)
+    responder_id TEXT NOT NULL, -- UID of the person who accepted (current user clicking Accept)
+    book_id UUID NOT NULL REFERENCES public.books(id), -- The main book involved
+    barter_book_id UUID REFERENCES public.books(id), -- The book offered in exchange (if any)
+    note TEXT,
+    status TEXT DEFAULT 'completed',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- RLS History
+ALTER TABLE public.exchange_transactions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow read own transactions" ON public.exchange_transactions;
+DROP POLICY IF EXISTS "Allow insert for all" ON public.exchange_transactions;
+
+CREATE POLICY "Allow read own transactions" ON public.exchange_transactions FOR SELECT TO public USING (true);
+CREATE POLICY "Allow insert for all" ON public.exchange_transactions FOR INSERT TO public WITH CHECK (true);
+
+
+-- 9. FUNCTIONS (RPC)
 -- =====================================================================================
 
--- Get or Create Chat Thread (Atomic Anti-Race Condition)
+-- RPC: Get or Create Chat Thread
 CREATE OR REPLACE FUNCTION get_or_create_chat_thread(
   current_user_id text,
   target_user_id text
@@ -232,7 +260,51 @@ BEGIN
 END;
 $$;
 
--- 9. RELOAD SCHEMA CACHE
+
+-- RPC: Complete Book Exchange
+-- Marks book as Exchanged with safety checks
+CREATE OR REPLACE FUNCTION complete_book_exchange(
+  p_book_id uuid,
+  p_user_id text
+)
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_book record;
+BEGIN
+  -- Cek apakah buku ada
+  SELECT * INTO v_book FROM public.books WHERE id = p_book_id;
+  
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Buku tidak ditemukan';
+  END IF;
+
+  -- Validasi request: Hanya boleh jika status Available
+  IF v_book.status != 'Available' THEN
+     -- Jika sudah exchanged, return success saja (idempotent)
+     IF v_book.status = 'Exchanged' THEN
+        RETURN json_build_object('success', true, 'message', 'Buku sudah berstatus Exchanged');
+     ELSE
+        RAISE EXCEPTION 'Buku tidak dalam status Available';
+     END IF;
+  END IF;
+
+  -- Update Status
+  UPDATE public.books
+  SET 
+    status = 'Exchanged',
+    updated_at = now()
+  WHERE id = p_book_id;
+
+  RETURN json_build_object('success', true, 'message', 'Buku berhasil ditandai sebagai Selesai/Exchanged');
+END;
+$$;
+
+
+-- 10. RELOAD SCHEMA CACHE
 -- =====================================================================================
 NOTIFY pgrst, 'reload schema';
 

@@ -63,6 +63,16 @@ export default function BookCard({ book, variant = "nearby", className, fullWidt
                     </div>
                 </Link>
 
+                {/* Status Overlay */}
+                {book.status && book.status !== 'Available' && (
+                    <div className="absolute inset-0 bg-brand-black/50 rounded-xl flex items-center justify-center z-10 pointer-events-none">
+                        <span className="text-white font-bold text-xs px-3 py-1.5 bg-black/40 rounded-full backdrop-blur-md border border-white/20 whitespace-normal text-center mx-2">
+                            {book.status === 'Archived' ? 'Diarsipkan' :
+                                book.status === 'Exchanged' ? 'Sudah Ditukar' : book.status}
+                        </span>
+                    </div>
+                )}
+
                 {/* Action Overlay (Outside Link) */}
                 {actionOverlay && (
                     <div className="absolute top-2 right-2 z-10">
