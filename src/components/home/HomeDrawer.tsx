@@ -1,8 +1,7 @@
-"use client";
-
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import toast from "react-hot-toast";
 import {
   RiBookOpenLine,
   RiCloseLine,
@@ -44,12 +43,14 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
   const permissionStatusRef = React.useRef<PermissionStatus | null>(null);
 
   const updateLocation = (lat: number, lng: number) => {
+    console.log("Updating location to:", { lat, lng });
     setCoordinates({ lat, lng });
     setLocationEnabled(true);
     setIsLoading(false);
 
     // Update global user context so distances are recalculated
     updateUser({ coordinates: { lat, lng } });
+    toast.success("Lokasi berhasil diperbarui!", { id: "refresh-location" });
   };
 
   const requestLocation = () => {
@@ -64,13 +65,26 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
             console.warn("Location error:", error.message);
             setLocationEnabled(false);
             setIsLoading(false);
+
+            let errorMessage = "Gagal mendapatkan lokasi";
+            if (error.code === error.PERMISSION_DENIED) {
+              errorMessage = "Izin lokasi ditolak";
+            } else if (error.code === error.POSITION_UNAVAILABLE) {
+              errorMessage = "Lokasi tidak tersedia";
+            } else if (error.code === error.TIMEOUT) {
+              errorMessage = "Waktu permintaan lokasi habis";
+            }
+            toast.error(errorMessage);
           },
           { timeout: 10000, maximumAge: 0, enableHighAccuracy: true }
         );
       } catch (error) {
         console.error("Error requesting location permission:", error);
         setIsLoading(false);
+        toast.error("Gagal meminta izin lokasi");
       }
+    } else {
+      toast.error("Browser tidak mendukung geolokasi");
     }
   };
 
@@ -79,6 +93,7 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
 
     if (locationEnabled) {
       setLocationEnabled(false);
+      toast("Lokasi dinonaktifkan");
       return;
     }
 
@@ -88,6 +103,7 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
   const handleRefreshLocation = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isLoading) return;
+    toast.loading("Memperbarui lokasi...", { id: "refresh-location" });
     requestLocation();
   };
 
@@ -174,11 +190,10 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
       {/* Drawer */}
       <div className="fixed top-0 w-full max-w-md h-full pointer-events-none z-[60] left-1/2 -translate-x-1/2 overflow-hidden">
         <div
-          className={`h-full w-80 max-w-[85vw] bg-brand-white transition-transform duration-300 ease-in-out ${
-            isOpen
-              ? "pointer-events-auto translate-x-0"
-              : "pointer-events-none -translate-x-full"
-          }`}
+          className={`h-full w-80 max-w-[85vw] bg-brand-white transition-transform duration-300 ease-in-out ${isOpen
+            ? "pointer-events-auto translate-x-0"
+            : "pointer-events-none -translate-x-full"
+            }`}
           style={{
             willChange: "transform",
           }}
@@ -210,9 +225,8 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
                     <button
                       onClick={handleRefreshLocation}
                       disabled={isLoading}
-                      className={`p-1.5 rounded-full text-brand-black hover:bg-gray-200 transition-colors ${
-                        isLoading ? "animate-spin" : ""
-                      }`}
+                      className={`p-1.5 rounded-full text-brand-black hover:bg-gray-200 transition-colors ${isLoading ? "animate-spin" : ""
+                        }`}
                       title="Perbarui Lokasi"
                     >
                       <RiRefreshLine className="w-5 h-5" />
@@ -222,14 +236,12 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
                   <button
                     onClick={handleToggleLocation}
                     disabled={isLoading}
-                    className={`w-10 h-5 rounded-full p-1 transition-colors duration-200 ease-in-out ${
-                      locationEnabled ? "bg-green-500" : "bg-gray-300"
-                    } ${isLoading ? "opacity-70 cursor-wait" : ""}`}
+                    className={`w-10 h-5 rounded-full p-1 transition-colors duration-200 ease-in-out ${locationEnabled ? "bg-green-500" : "bg-gray-300"
+                      } ${isLoading ? "opacity-70 cursor-wait" : ""}`}
                   >
                     <div
-                      className={`bg-white w-3 h-3 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${
-                        locationEnabled ? "translate-x-5" : "translate-x-0"
-                      }`}
+                      className={`bg-white w-3 h-3 rounded-full shadow-md transform transition-transform duration-200 ease-in-out ${locationEnabled ? "translate-x-5" : "translate-x-0"
+                        }`}
                     />
                   </button>
                 </div>

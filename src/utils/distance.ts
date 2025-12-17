@@ -20,8 +20,16 @@ export function haversineDistance(
 
 export function formatDistance(distanceKm: number | null): string {
     if (distanceKm === null) return "Lokasi tidak diketahui";
-    if (distanceKm < 1) {
-        return `${Math.round(distanceKm * 1000)} m dari lokasimu`;
+
+    // Handle very small distances (less than 10 meters)
+    if (distanceKm < 0.01) {
+        return "< 10 m dari lokasimu";
     }
+
+    if (distanceKm < 1) {
+        const meters = Math.round(distanceKm * 1000);
+        return `${meters} m dari lokasimu`;
+    }
+
     return `${distanceKm.toFixed(1)} km dari lokasimu`;
 }
