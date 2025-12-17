@@ -6,6 +6,8 @@ import { RiMapPinLine, RiMore2Fill } from "@remixicon/react";
 import { Book } from "@/types/book";
 import { useAuth } from "@/context/AuthContext";
 
+import Link from "next/link";
+
 interface OwnerInfoProps {
     owner: Book['owner'];
 }
@@ -14,19 +16,19 @@ export default function OwnerInfo({ owner }: OwnerInfoProps) {
     const { user } = useAuth();
 
     // Fallback logic: if this is the logged-in user, trust the auth context address first if available, 
-    // otherwise fallback to owner prop (which might be mock or stale).
-    // If it's another user, just use the owner prop.
+    // otherwise fallback to owner prop. 
+    // Uses owner.address if locationLabel is missing.
     const isMe = user?.id === owner.id;
 
-    const displayLocation = isMe && user?.address
+    const displayLocation = (isMe && user?.address)
         ? `${user.address.district}, ${user.address.regency}`
-        : owner.locationLabel;
+        : (owner.locationLabel || (owner.address ? `${owner.address.district}, ${owner.address.regency}` : "Lokasi tidak diketahui"));
 
     return (
         <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 group">
                 {/* Avatar */}
-                <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 border border-gray-100">
+                <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gray-200 border border-gray-100 group-hover:border-gray-300 transition-colors">
                     {owner.avatar && owner.avatar !== 'google' ? (
                         <Image
                             src={owner.avatar.startsWith('http') ? owner.avatar : `/assets/avatar/${owner.avatar}`}

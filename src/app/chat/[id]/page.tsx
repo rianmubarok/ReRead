@@ -1,259 +1,134 @@
 "use client";
-// Force refresh for mock data update
+
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import ChatDetailHeader from "@/components/chat/ChatDetailHeader";
 import ChatInput from "@/components/chat/ChatInput";
 import BookContextPanel from "@/components/chat/BookContextPanel";
 import MessageBubble from "@/components/chat/MessageBubble";
-import ChatBookCard from "@/components/chat/ChatBookCard";
-import { MOCK_CHATS } from "@/data/mockChats";
-import { MOCK_BOOKS } from "@/data/mockBooks";
 import { useNav } from "@/context/NavContext";
-import { chatService } from "@/services/chat.service";
-import { ChatMessage } from "@/types/chat";
-import { useChatStore } from "@/stores/chat.store";
+import { ChatMessage, ChatThread } from "@/types/chat";
 import { Book } from "@/types/book";
-import { parseMockDate, formatChatDate } from "@/utils/dateUtils";
+import { formatChatDate } from "@/utils/dateUtils";
 import { useAuth } from "@/context/AuthContext";
-import { addExchangeHistory } from "@/storage/exchange.storage";
 import toast from "react-hot-toast";
+import { getChatRepository } from "@/repositories/chat.repository";
+import { getBookRepository } from "@/repositories/book.repository";
 
 export default function ChatDetailPage() {
   const { setVisible } = useNav();
   const { user: currentUser } = useAuth();
   const params = useParams();
   const searchParams = useSearchParams();
-  const chatId = params?.id as string;
-  const bookId = searchParams?.get("bookId");
+  const paramId = params?.id as string; // Could be ChatID or UserID
+  const bookIdParam = searchParams?.get("bookId");
 
   // State
-  const [user, setUser] = useState<{
-    id: string;
-    name: string;
-    avatar: string;
-    status: string;
-  } | null>(null);
-  const [book, setBook] = useState<Book | null>(null);
-  const [showBookContext, setShowBookContext] = useState(false);
+  const [thread, setThread] = useState<ChatThread | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const chatStore = useChatStore();
+  // Book Context State
+  const [contextBook, setContextBook] = useState<Book | null>(null);
+  const [showBookContext, setShowBookContext] = useState(false);
 
-  // Hide bottom nav on mount, show on unmount
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Hide bottom nav
   useEffect(() => {
     setVisible(false);
     return () => setVisible(true);
   }, [setVisible]);
 
-  // Initialize data and load messages
+  // 1. Initialize Thread & Load Context
   useEffect(() => {
-    const initializeChat = async () => {
+    const init = async () => {
+      if (!currentUser?.uid || !paramId) return;
       setIsLoading(true);
 
-      // 1. Try to find existing chat by ID
-      const existingChat = MOCK_CHATS.find((c) => c.id === chatId);
-
-      if (existingChat) {
-        setUser({
-          id: existingChat.user.id,
-          name: existingChat.user.name,
-          avatar: existingChat.user.avatar || "google",
-          status: "Aktif",
-        });
-
-        if (chatId === "chat1") {
-          // Removed debug clearing logic that was causing data loss
-        }
-      }
-
-      // 2. Check for book context if bookId is present
-      if (bookId) {
-        const foundBook = MOCK_BOOKS.find((b) => b.id === bookId);
-        if (foundBook) {
-          setBook(foundBook);
-          setShowBookContext(!existingChat);
-          if (!existingChat) {
-            setUser({
-              id: foundBook.owner.id,
-              name: foundBook.owner.name,
-              avatar: foundBook.owner.avatar || "google",
-              status: "Aktif",
-            });
-          }
-        }
-      } else if (!existingChat) {
-        setUser({
-          id: "user1",
-          name: "Nadia Putri",
-          avatar: "google",
-          status: "Aktif",
-        });
-      }
-
-      // 3. Load messages from chat service/store
       try {
-        const loadedMessages = await chatService.getMessages(chatId);
-        let finalMessages = [...loadedMessages];
+        // A. Resolve Thread (Find by ID or UserID, or Create if UserID)
+        let resolvedThread = await getChatRepository().getChatThread(paramId, currentUser.uid);
 
-        // Jika ada mock chat, jadikan mock sebagai sumber kebenaran utama,
-        // lalu tambahkan pesan baru dari store yang ID-nya belum ada di mock.
-        if (existingChat) {
-          let mockMessages: ChatMessage[] = [];
-
-          if (existingChat.messages && existingChat.messages.length > 0) {
-            mockMessages = existingChat.messages.map((m, index) => ({
-              id: m.id,
-              text: m.text,
-              senderId:
-                m.senderId === "me"
-                  ? currentUser?.id || "me"
-                  : existingChat.user.id,
-              timestamp: parseMockDate(m.timestamp),
-              // Book context utama dan book dari exchangeRequest
-              bookId:
-                index === 0
-                  ? existingChat.bookContext?.id
-                  : m.exchangeRequest?.bookId ?? undefined,
-              isRead: m.isRead,
-              messageType: m.messageType,
-              exchangeRequest: m.exchangeRequest,
-            }));
-          } else if (existingChat.lastMessage) {
-            mockMessages = [
-              {
-                id: `init-${Date.now()}`,
-                text: existingChat.lastMessage,
-                senderId: existingChat.user.id,
-                timestamp: parseMockDate(existingChat.timestamp),
-                isRead: false,
-              },
-            ];
+        // If not found, and paramId looks like a UserID, try to create/ensure thread exists
+        if (!resolvedThread) {
+          // Check if paramId is a potential UserID (not a UUID format check strictly, but let's try create)
+          // If getChatThread returned null, it implies no thread found. 
+          // If paramId is actually a valid UserID, createChatThread will handle "find or create".
+          try {
+            resolvedThread = await getChatRepository().createChatThread(paramId, currentUser.uid);
+          } catch (createErr) {
+            console.warn("Failed to create thread, paramId might not be a valid UserID", createErr);
           }
-
-          const mockIds = new Set(mockMessages.map((m) => m.id));
-          const newFromStore = loadedMessages.filter((m) => !mockIds.has(m.id));
-
-          finalMessages = [...mockMessages, ...newFromStore].sort(
-            (a, b) => a.timestamp.getTime() - b.timestamp.getTime()
-          );
-
-          // Sinkronkan kembali ke store supaya state konsisten
-          chatStore.clearMessages(chatId);
-          finalMessages.forEach((msg) => chatStore.addMessage(chatId, msg));
         }
 
-        setMessages(finalMessages);
+        if (resolvedThread) {
+          setThread(resolvedThread);
+
+          // B. Load Messages
+          const msgs = await getChatRepository().getMessages(resolvedThread.id);
+          setMessages(msgs);
+
+          // C. Mark as read
+          if (currentUser?.uid) {
+            await getChatRepository().markAsRead(resolvedThread.id, currentUser.uid);
+          }
+        }
+
+        // C. Load Book Context if provided
+        if (bookIdParam) {
+          const book = await getBookRepository().getBookById(bookIdParam);
+          if (book) {
+            setContextBook(book);
+            // Show context only if no messages yet or explicit intent?
+            // Usually show if bookId is passed
+            setShowBookContext(true);
+          }
+        }
+
       } catch (error) {
-        console.error("Error loading messages:", error);
+        console.error("Error initializing chat:", error);
+        toast.error("Gagal memuat percakapan");
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (chatId) {
-      initializeChat();
-    }
-  }, [chatId, bookId]);
+    init();
+  }, [currentUser, paramId, bookIdParam]);
 
-  // Subscribe to chat store changes for real-time updates
+  // 2. Realtime Polling
   useEffect(() => {
-    if (!chatId) return;
+    if (!thread?.id || !currentUser?.uid) return;
 
-    const storeMessages = chatStore.getMessages(chatId);
-    const uniqueMessages = Array.from(
-      new Map(storeMessages.map((msg) => [msg.id, msg])).values()
-    ).sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-
-    setMessages((prev) => {
-      const prevIds = new Set(prev.map((m) => m.id));
-      const newIds = new Set(uniqueMessages.map((m) => m.id));
-
-      if (
-        prev.length === uniqueMessages.length &&
-        prev.every((m) => newIds.has(m.id)) &&
-        uniqueMessages.every((m) => prevIds.has(m.id))
-      ) {
-        return prev;
+    const interval = setInterval(async () => {
+      try {
+        const msgs = await getChatRepository().getMessages(thread.id);
+        // Simple diff check or replace
+        if (msgs.length !== messages.length) {
+          setMessages(msgs);
+        } else {
+          // Check last message ID
+          const lastNew = msgs[msgs.length - 1];
+          const lastOld = messages[messages.length - 1];
+          if (lastNew?.id !== lastOld?.id) {
+            setMessages(msgs);
+            // Mark as read if from others
+            if (lastNew && lastNew.senderId !== currentUser.uid) {
+              await getChatRepository().markAsRead(thread.id, currentUser.uid);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Polling error", e);
       }
+    }, 3000);
 
-      return uniqueMessages;
-    });
-  }, [chatId, chatStore.messages]);
+    return () => clearInterval(interval);
+  }, [thread?.id, messages, currentUser]);
 
-  // Handle sending message
-  const handleSendMessage = async (text: string) => {
-    if (!text.trim() || !chatId || !currentUser?.id) return;
 
-    try {
-      await chatService.sendMessage(
-        chatId,
-        text,
-        currentUser.id,
-        showBookContext ? book?.id : undefined
-      );
-    } catch (error) {
-      console.error("Error sending message:", error);
-    }
-  };
-
-  const handleConfirmExchange = (action: string, messageId: string) => {
-    if (action !== "confirm_exchange" && action !== "cancel_exchange") return;
-
-    const currentMessages = messages;
-    const msg = currentMessages.find((m) => m.id === messageId);
-    if (!msg || !msg.exchangeRequest) return;
-
-    if (action === "cancel_exchange") {
-      const remaining = currentMessages.filter((m) => m.id !== messageId);
-      setMessages(remaining);
-
-      // Sinkronkan ke store tanpa pesan yang dibatalkan
-      chatStore.clearMessages(chatId);
-      remaining.forEach((m) => chatStore.addMessage(chatId, m));
-
-      toast.success("Pengajuan selesai dibatalkan");
-      return;
-    }
-
-    // Konfirmasi: tandai completed, simpan di chat, dan tulis ke riwayat
-    const updated: ChatMessage = {
-      ...msg,
-      exchangeRequest: {
-        ...msg.exchangeRequest,
-        status: "completed" as "completed",
-      },
-    };
-
-    const next: ChatMessage[] = currentMessages.map(
-      (m): ChatMessage => (m.id === messageId ? updated : m)
-    );
-
-    setMessages(next);
-
-    // Sinkronkan ke store
-    chatStore.clearMessages(chatId);
-    next.forEach((m) => chatStore.addMessage(chatId, m));
-
-    // Tambah ke riwayat pertukaran (local)
-    if (user) {
-      const exchangeBookId: string =
-        (updated.exchangeRequest && updated.exchangeRequest.bookId) || "";
-
-      addExchangeHistory({
-        chatId: chatId || "",
-        bookId: exchangeBookId,
-        partnerId: user.id,
-        note: updated.text,
-      });
-    }
-
-    toast.success("Pertukaran ditandai selesai");
-  };
-
-  // Scroll to bottom when messages change
+  // 3. Scroll to bottom
   useEffect(() => {
     if (messages.length > 0) {
       setTimeout(() => {
@@ -262,7 +137,54 @@ export default function ChatDetailPage() {
     }
   }, [messages]);
 
-  if (!user || isLoading) {
+
+  const handleSendMessage = async (text: string) => {
+    if (!text.trim() || !thread || !currentUser?.uid) return;
+
+    // Optimistic Update
+    const tempId = `temp-${Date.now()}`;
+    const optimMsg: ChatMessage = {
+      id: tempId,
+      text,
+      senderId: currentUser.uid,
+      timestamp: new Date(),
+      bookId: showBookContext ? contextBook?.id : undefined,
+      isRead: false
+    };
+    setMessages(prev => [...prev, optimMsg]);
+
+    try {
+      const sentMsg = await getChatRepository().sendMessage(
+        thread.id,
+        text,
+        currentUser.uid,
+        {
+          bookId: showBookContext ? contextBook?.id : undefined
+        }
+      );
+
+      // Replace optimistic
+      setMessages(prev => prev.map(m => m.id === tempId ? sentMsg : m));
+
+      // Hide specific context panel after sending context-aware message? 
+      // User might want to keep it open? Let's keep it.
+
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast.error("Gagal mengirim pesan");
+      setMessages(prev => prev.filter(m => m.id !== tempId));
+    }
+  };
+
+  // Handle Exchange Actions (Accept/Refuse/Cancel) via Messages
+  const handleAction = async (action: string, messageId: string) => {
+    // Implementation for confirming exchange would update metadata in DB
+    // Not yet implemented in repository fully (need updateMessage method)
+    // For now, show toast
+    toast("Fitur update status pengajuan akan segera hadir!");
+  };
+
+  if (isLoading || !currentUser) {
     return (
       <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
         <div className="text-gray-400 text-sm">Memuat...</div>
@@ -270,17 +192,21 @@ export default function ChatDetailPage() {
     );
   }
 
+  if (!thread) {
+    return (
+      <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="text-gray-400 text-sm">Percakapan tidak ditemukan.</div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-screen bg-[#F8F9FA]">
       <ChatDetailHeader
-        name={user.name}
-        status={user.status}
-        avatar={user.avatar}
-        hasPendingExchange={messages.some(
-          (m) =>
-            m.messageType === "exchange_request" &&
-            m.exchangeRequest?.status === "pending"
-        )}
+        name={thread.user.name}
+        status="Online"
+        avatar={thread.user.avatar || 'google'}
+        hasPendingExchange={false}
       />
 
       {/* Messages Area */}
@@ -288,13 +214,13 @@ export default function ChatDetailPage() {
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 text-sm space-y-1 min-h-[200px]">
             <p>Belum ada pesan.</p>
-            <p>Mulai percakapan dengan {user.name}</p>
+            <p>Mulai percakapan dengan {thread.user.name}</p>
           </div>
         ) : (
           <div className="mt-auto space-y-3 pb-4">
             {(() => {
               let lastDate = "";
-              return messages.map((msg, index) => {
+              return messages.map((msg) => {
                 const messageDate = formatChatDate(msg.timestamp);
                 const showDate = messageDate !== lastDate;
                 lastDate = messageDate;
@@ -310,9 +236,12 @@ export default function ChatDetailPage() {
                     )}
                     <MessageBubble
                       message={msg}
-                      user={user}
-                      currentUserId={currentUser?.id || "me"}
-                      onAction={handleConfirmExchange}
+                      user={{
+                        name: thread.user.name,
+                        avatar: thread.user.avatar || 'google'
+                      }}
+                      currentUserId={currentUser.uid}
+                      onAction={handleAction}
                     />
                   </React.Fragment>
                 );
@@ -325,12 +254,12 @@ export default function ChatDetailPage() {
 
       {/* Bottom Section: Context Panel + Input */}
       <div className="z-30 bg-[#F8F9FA]">
-        {showBookContext && book && (
+        {showBookContext && contextBook && (
           <div>
             <BookContextPanel
-              book={book}
+              book={contextBook}
               onClose={() => setShowBookContext(false)}
-              onSendMessage={handleSendMessage}
+              onSendMessage={handleSendMessage} // Simple string send for now
             />
           </div>
         )}

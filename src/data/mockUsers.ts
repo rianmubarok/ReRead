@@ -23,7 +23,7 @@ export const MOCK_USERS: MockUser[] = [
     },
     coordinates: { lat: -6.59, lng: 110.67 },
     bio: "Pecinta sejati buku fiksi, sejarah, dan novel klasik. Suka berdiskusi tentang buku sambil minum kopi.",
-    locationLabel: "Panggang, Jepara, Jawa Tengah",
+
     onboardingCompleted: true,
   },
   {
@@ -41,7 +41,7 @@ export const MOCK_USERS: MockUser[] = [
       village: "Tahunan",
     },
     coordinates: { lat: -6.62, lng: 110.68 },
-    locationLabel: "Tahunan, Jepara, Jawa Tengah",
+
     onboardingCompleted: true,
   },
   {
@@ -59,7 +59,7 @@ export const MOCK_USERS: MockUser[] = [
       village: "Mlonggo",
     },
     coordinates: { lat: -6.53, lng: 110.7 },
-    locationLabel: "Mlonggo, Jepara, Jawa Tengah",
+
     onboardingCompleted: true,
   },
   {
@@ -77,7 +77,7 @@ export const MOCK_USERS: MockUser[] = [
       village: "Batealit",
     },
     coordinates: { lat: -6.63, lng: 110.72 },
-    locationLabel: "Batealit, Jepara, Jawa Tengah",
+
     onboardingCompleted: true,
   },
   {
@@ -95,7 +95,7 @@ export const MOCK_USERS: MockUser[] = [
       village: "Mayong",
     },
     coordinates: { lat: -6.74, lng: 110.75 },
-    locationLabel: "Mayong, Jepara, Jawa Tengah",
+
     onboardingCompleted: true,
   },
   {
@@ -113,7 +113,7 @@ export const MOCK_USERS: MockUser[] = [
       village: "Pecangaan",
     },
     coordinates: { lat: -6.7, lng: 110.7 },
-    locationLabel: "Pecangaan, Jepara, Jawa Tengah",
+
     onboardingCompleted: true,
   },
   {
@@ -131,7 +131,7 @@ export const MOCK_USERS: MockUser[] = [
       village: "Welahan",
     },
     coordinates: { lat: -6.77, lng: 110.65 },
-    locationLabel: "Welahan, Jepara, Jawa Tengah",
+
     onboardingCompleted: true,
   },
   {
@@ -149,7 +149,7 @@ export const MOCK_USERS: MockUser[] = [
       village: "Keling",
     },
     coordinates: { lat: -6.46, lng: 110.85 },
-    locationLabel: "Keling, Jepara, Jawa Tengah",
+
     onboardingCompleted: true,
   },
   {
@@ -167,7 +167,7 @@ export const MOCK_USERS: MockUser[] = [
       village: "Kembang",
     },
     coordinates: { lat: -6.5, lng: 110.8 },
-    locationLabel: "Kembang, Jepara, Jawa Tengah",
+
     onboardingCompleted: true,
   },
   {
@@ -185,7 +185,7 @@ export const MOCK_USERS: MockUser[] = [
       village: "Karimunjawa",
     },
     coordinates: { lat: -5.85, lng: 110.43 },
-    locationLabel: "Karimunjawa, Jepara, Jawa Tengah",
+
     onboardingCompleted: true,
   },
 ];

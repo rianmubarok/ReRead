@@ -1,92 +1,174 @@
 "use client";
 
-import React, { use, useEffect, useState } from "react";
+import React, { use, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { RiArrowLeftLine, RiImageAddLine } from "@remixicon/react";
+import { RiArrowLeftLine, RiImageAddLine, RiCloseCircleFill } from "@remixicon/react";
 import { useAuth } from "@/context/AuthContext";
-import { MOCK_BOOKS } from "@/data/mockBooks";
-import { Book } from "@/types/book";
+import { Book, ExchangeMethod } from "@/types/book";
 import { notFound } from "next/navigation";
+import { getBookRepository } from "@/repositories/book.repository";
+import { uploadBookImage } from "@/services/storage.service";
+import toast from "react-hot-toast";
+import Image from "next/image";
 
 export default function EditBookPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params);
     const router = useRouter();
     const { user } = useAuth();
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const [book, setBook] = useState<Book | null>(null);
 
-    // Initialize state only after finding the book
+    // Image Upload State
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const [formData, setFormData] = useState({
         title: "",
         author: "",
         category: "Non-Fiksi",
         condition: "Baik",
         description: "",
-        price: "",
+        exchangeMethods: [] as ExchangeMethod[],
+        status: "Available" as "Available" | "Archived",
     });
 
+    // Valid Exchange Methods (from Book type)
+    const availableExchangeMethods: ExchangeMethod[] = ["Gratis / Dipinjamkan", "Nego", "Barter"];
+
     useEffect(() => {
-        // Find the book
-        const foundBook = MOCK_BOOKS.find((b) => b.id === id);
+        const fetchBook = async () => {
+            try {
+                const foundBook = await getBookRepository().getBookById(id);
+                if (!foundBook) {
+                    notFound();
+                    return;
+                }
 
-        if (!foundBook) {
-            notFound(); // This might need error boundary handling in Next.js app dir 
-            // fallback if notFound() throws immediately:
-            return;
+                // Check ownership
+                if (user && foundBook.owner.id !== user.id) {
+                    toast.error("Anda tidak memiliki akses untuk mengedit buku ini");
+                    router.push("/my-books");
+                    return;
+                }
+
+                setBook(foundBook);
+                setFormData({
+                    title: foundBook.title,
+                    author: foundBook.author,
+                    category: foundBook.category,
+                    condition: foundBook.condition,
+                    description: foundBook.description,
+                    exchangeMethods: foundBook.exchangeMethods || [],
+                    status: foundBook.status || "Available",
+                });
+                setImagePreview(foundBook.image);
+            } catch (err) {
+                console.error("Failed to load book:", err);
+                toast.error("Gagal memuat detail buku");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        if (user && id) {
+            fetchBook();
         }
-
-        // Check ownership
-        // In real app, API would return 403 or 404. Here we check client side.
-        // Wait for user to be loaded (if user is null but loading, we might wait, 
-        // but for now assume user is present if accessing this protected route logic)
-        if (user && foundBook.owner.id !== user.id) {
-            router.push("/my-books"); // Redirect if not owner
-            return;
-        }
-
-        setBook(foundBook);
-        setFormData({
-            title: foundBook.title,
-            author: foundBook.author,
-            category: foundBook.category,
-            condition: foundBook.condition,
-            description: foundBook.description,
-            price: foundBook.price?.toString() || "",
-        });
     }, [id, user, router]);
-
-    const categories = ["Fiksi", "Non-Fiksi", "Pendidikan", "Komik", "Sastra"];
-    const conditions = ["Baru", "Baik", "Bekas"];
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsLoading(true);
+    const toggleExchangeMethod = (method: ExchangeMethod) => {
+        setFormData(prev => {
+            const current = prev.exchangeMethods;
+            if (current.includes(method)) {
+                return { ...prev, exchangeMethods: current.filter(m => m !== method) };
+            } else {
+                return { ...prev, exchangeMethods: [...current, method] };
+            }
+        });
+    };
 
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+    // Image Handlers
+    const handleImageClick = () => {
+        fileInputRef.current?.click();
+    };
 
-        if (book) {
-            // Update MOCK_DATA in place
-            book.title = formData.title;
-            book.author = formData.author;
-            book.category = formData.category as any;
-            book.condition = formData.condition as any;
-            book.description = formData.description;
-            book.price = formData.price ? Number(formData.price) : undefined;
-
-            // Navigate back
-            router.back();
-        } else {
-            setIsLoading(false);
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                toast.error("Ukuran gambar maksimal 5MB");
+                return;
+            }
+            if (!file.type.startsWith('image/')) {
+                toast.error("Mohon upload file gambar valid");
+                return;
+            }
+            setImageFile(file);
+            const objectUrl = URL.createObjectURL(file);
+            setImagePreview(objectUrl);
         }
     };
 
-    if (!book) return <div className="min-h-screen bg-brand-white pt-24 text-center">Loading...</div>;
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (formData.exchangeMethods.length === 0) {
+            toast.error("Pilih minimal satu metode pertukaran");
+            return;
+        }
+
+        setIsSaving(true);
+        const loadingToast = toast.loading("Menyimpan perubahan...");
+
+        try {
+            let imageUrl = book?.image; // Default to existing image
+
+            // Convert local image file to URL if new file uploaded
+            if (imageFile) {
+                const uploadedUrl = await uploadBookImage(imageFile);
+                if (uploadedUrl) {
+                    imageUrl = uploadedUrl;
+                } else {
+                    throw new Error("Gagal mengupload gambar");
+                }
+            }
+
+            // Update Book
+            await getBookRepository().updateBook(id, {
+                title: formData.title,
+                author: formData.author,
+                category: formData.category as any,
+                condition: formData.condition as any,
+                description: formData.description,
+                exchangeMethods: formData.exchangeMethods,
+                status: formData.status,
+                image: imageUrl,
+            });
+
+            toast.success("Buku berhasil diperbarui!", { id: loadingToast });
+            router.refresh(); // Ensure data is fresh
+            router.back();
+        } catch (error) {
+            console.error("Update failed:", error);
+            toast.error("Gagal menyimpan perubahan", { id: loadingToast });
+            setIsSaving(false);
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-brand-white flex items-center justify-center">
+                <div className="w-8 h-8 border-4 border-gray-200 border-t-brand-black rounded-full animate-spin"></div>
+            </div>
+        );
+    }
+
+    if (!book) return null;
 
     return (
         <div className="min-h-screen bg-brand-white pb-32">
@@ -108,17 +190,39 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
             <div className="pt-24 px-6 max-w-md mx-auto">
                 <form onSubmit={handleSubmit} className="space-y-6">
 
-                    {/* Image Placeholder */}
-                    <div className="w-full aspect-[3/4] max-h-64 bg-gray-100 rounded-xl flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer relative overflow-hidden">
-                        {/* Show existing image if any, currently mock doesn't consistently store URLs we can render easily if blank, 
-                         so we stick to placeholder or checking book.image */}
-                        {book.image ? (
-                            // Keeping it simple with placeholder since handling Next/Image with varied mock URLs might break
-                            <img src={book.image} alt="Preview" className="w-full h-full object-cover opacity-50" />
+                    {/* Image Upload */}
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="hidden"
+                    />
+
+                    <div
+                        onClick={handleImageClick}
+                        className="w-full aspect-[3/4] max-h-64 bg-gray-100 rounded-xl flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer relative overflow-hidden group"
+                    >
+                        {imagePreview ? (
+                            <>
+                                <Image
+                                    src={imagePreview}
+                                    alt="Preview"
+                                    fill
+                                    className="object-cover"
+                                />
+                                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                                    <span className="bg-white/90 text-brand-black px-4 py-2 rounded-full text-sm font-medium shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                                        Ganti Foto
+                                    </span>
+                                </div>
+                            </>
                         ) : (
-                            <RiImageAddLine className="w-12 h-12 mb-2" />
+                            <>
+                                <RiImageAddLine className="w-12 h-12 mb-2" />
+                                <span className="text-sm font-medium relative z-10">Upload Foto Buku</span>
+                            </>
                         )}
-                        <span className="text-sm font-medium relative z-10">Ubah Foto Buku</span>
                     </div>
 
                     {/* Title */}
@@ -149,6 +253,20 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
                         />
                     </div>
 
+                    {/* Status */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-brand-black">Status</label>
+                        <select
+                            name="status"
+                            value={formData.status}
+                            onChange={handleChange}
+                            className="w-full bg-gray-50 border border-gray-200 text-brand-black rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-brand-black transition-all appearance-none"
+                        >
+                            <option value="Available">Tersedia (Aktif)</option>
+                            <option value="Archived">Diarsipkan</option>
+                        </select>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                         {/* Category */}
                         <div className="space-y-2">
@@ -159,7 +277,7 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
                                 onChange={handleChange}
                                 className="w-full bg-gray-50 border border-gray-200 text-brand-black rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-brand-black transition-all appearance-none"
                             >
-                                {categories.map(c => (
+                                {["Fiksi", "Non-Fiksi", "Pendidikan", "Komik", "Sastra"].map(c => (
                                     <option key={c} value={c}>{c}</option>
                                 ))}
                             </select>
@@ -174,14 +292,35 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
                                 onChange={handleChange}
                                 className="w-full bg-gray-50 border border-gray-200 text-brand-black rounded-xl px-4 py-3 focus:outline-none focus:ring-1 focus:ring-brand-black transition-all appearance-none"
                             >
-                                {conditions.map(c => (
+                                {["Baru", "Baik", "Bekas"].map(c => (
                                     <option key={c} value={c}>{c}</option>
                                 ))}
                             </select>
                         </div>
                     </div>
 
-                    {/* Price - REMOVED */}
+                    {/* Exchange Methods */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-bold text-brand-black mb-1 block">Metode Pertukaran</label>
+                        <div className="flex flex-wrap gap-2">
+                            {availableExchangeMethods.map((method) => {
+                                const isSelected = formData.exchangeMethods.includes(method);
+                                return (
+                                    <button
+                                        key={method}
+                                        type="button"
+                                        onClick={() => toggleExchangeMethod(method)}
+                                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isSelected
+                                            ? "bg-brand-black text-white shadow-md"
+                                            : "bg-gray-100 text-brand-gray hover:bg-gray-200"
+                                            }`}
+                                    >
+                                        {method}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
 
                     {/* Description */}
                     <div className="space-y-2">
@@ -200,10 +339,10 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={isLoading}
-                        className={`w-full bg-brand-black text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all active:scale-95 ${isLoading ? 'opacity-70 cursor-wait' : 'hover:scale-[1.02]'}`}
+                        disabled={isSaving}
+                        className={`w-full bg-brand-black text-white font-bold py-4 rounded-full shadow-lg hover:shadow-xl transition-all active:scale-95 ${isSaving ? 'opacity-70 cursor-wait' : 'hover:scale-[1.02]'}`}
                     >
-                        {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                        {isSaving ? "Menyimpan..." : "Simpan Perubahan"}
                     </button>
 
                     {/* Bottom Spacer */}

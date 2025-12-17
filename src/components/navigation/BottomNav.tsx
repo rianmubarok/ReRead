@@ -4,6 +4,8 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useNav } from "@/context/NavContext";
+import { useAuth } from "@/context/AuthContext";
+import { getChatRepository } from "@/repositories/chat.repository";
 import {
   RiHomeLine,
   RiHomeFill,
@@ -14,11 +16,34 @@ import {
   RiUserLine,
   RiUserFill,
 } from "@remixicon/react";
-import { MOCK_CHATS } from "@/data/mockChats";
 
 export default function BottomNav() {
   const { isVisible } = useNav();
+  const { user } = useAuth();
   const pathname = usePathname();
+  const [unreadCount, setUnreadCount] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!user) {
+      setUnreadCount(0);
+      return;
+    }
+    const fetchUnread = async () => {
+      try {
+        const count = await getChatRepository().getTotalUnreadCount(user.uid);
+        setUnreadCount(count);
+      } catch (error) {
+        console.error("Failed to fetch unread count", error);
+      }
+    };
+
+    // Initial fetch
+    fetchUnread();
+
+    // Poll every 5s logic for near-realtime updates
+    const interval = setInterval(fetchUnread, 5000);
+    return () => clearInterval(interval);
+  }, [user, pathname]);
 
   if (!isVisible) return null;
 
@@ -64,7 +89,7 @@ export default function BottomNav() {
                 }`}
             >
               <Icon size={24} />
-              {item.label === "Chat" && MOCK_CHATS.reduce((acc, chat) => acc + chat.unreadCount, 0) > 0 && (
+              {item.label === "Chat" && unreadCount > 0 && (
                 <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-brand-red rounded-full border-2 border-white translate-x-1/4 -translate-y-1/4" />
               )}
             </div>
@@ -74,4 +99,3 @@ export default function BottomNav() {
     </div>
   );
 }
-

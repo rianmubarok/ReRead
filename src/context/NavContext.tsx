@@ -17,11 +17,35 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         // Automatically show nav for main tab routes
-        // Home (/) handles its own visibility based on onboarding state
-        const mainRoutes = ['/chat', '/bookmarks', '/profile'];
-        if (mainRoutes.some(route => pathname.startsWith(route))) {
+        // We explicitly check for routes that should have the bottom nav
+        const mainRoutes = [
+            '/',
+            '/chat',
+            '/bookmarks',
+            '/profile'
+        ];
+
+        // Check exact match for Home
+        if (pathname === '/') {
             setVisible(true);
+            return;
         }
+
+        // Check for other routes
+        // For /chat, only the list page should show nav, specific chat rooms (/chat/id) usually hide it
+        if (pathname === '/chat') {
+            setVisible(true);
+            return;
+        }
+
+        // For bookmarks and profile, we generally show it, unless specifically hidden by subpages
+        // Using startsWith allows /profile/settings etc to still have nav if desired, 
+        // but we can refine if needed.
+        if (pathname.startsWith('/bookmarks') || pathname.startsWith('/profile') || pathname === '/my-books') {
+            setVisible(true);
+            return;
+        }
+
     }, [pathname]);
 
     return (

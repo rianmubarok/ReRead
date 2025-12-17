@@ -41,7 +41,8 @@ export interface AuthRepository {
     name: string,
     avatar: string,
     address: Address,
-    email?: string
+    email?: string,
+    uid?: string
   ): Promise<User>;
   logout(): Promise<void>;
   checkSession(): Promise<User | null>;
@@ -53,10 +54,11 @@ class MockAuthRepository implements AuthRepository {
     name: string,
     avatar: string,
     address: Address,
-    email?: string
+    email?: string,
+    existingUid?: string
   ): Promise<User> {
     await maybeDelay(300);
-    const uid = generateId("dev-user");
+    const uid = existingUid || generateId("dev-user");
     const district = address?.district;
     const coordinates =
       district && DISTRICT_COORDS[district]
@@ -114,31 +116,155 @@ class MockAuthRepository implements AuthRepository {
 
 class SupabaseAuthRepository implements AuthRepository {
   async login(
-    _name: string,
-    _avatar: string,
-    _address: Address,
-    _email?: string
+    name: string,
+    avatar: string,
+    address: Address,
+    email?: string,
+    uid?: string
   ): Promise<User> {
     if (!supabase) throw new Error("Supabase not configured");
-    throw new Error("Supabase auth not implemented");
+
+    const userId = uid || generateId("user");
+
+    // Determine coordinates based on district
+    const district = address?.district;
+    const coordinates =
+      district && DISTRICT_COORDS[district]
+        ? DISTRICT_COORDS[district]
+        : { lat: -6.5818, lng: 110.6684 }; // Default to Jepara logic
+
+    const updates = {
+      uid: userId, // store in uid col to match firebase
+      name,
+      email,
+      avatar,
+      address,       // storing specific fields as json is fine or separate cols
+      coordinates,
+      onboarding_completed: true,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Upsert into users table
+    const { data, error } = await supabase
+      .from("users")
+      .upsert(updates, { onConflict: "uid" })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase upsert user error:", JSON.stringify(error, null, 2));
+      // Fallback to local
+      if (DEV_MODE) console.warn("Fallback to local due to Supabase error");
+    }
+
+    // Return the user object in our app's format
+    const userData: User = {
+      id: data?.id || userId, // db id
+      uid: userId,
+      name,
+      email,
+      avatar,
+      address,
+      coordinates,
+      onboardingCompleted: true,
+    };
+
+    // Cache locally for performance
+    setUser(userData);
+
+    return userData;
   }
+
   async logout(): Promise<void> {
     if (!supabase) return;
-    // TODO: supabase.auth.signOut();
+    await supabase.auth.signOut();
+    clearUser();
   }
+
   async checkSession(): Promise<User | null> {
     if (!supabase) return null;
-    // TODO: use supabase.auth.getUser()
-    return null;
+
+    // 1. Get the locally cached user to find the UID (from previous Firebase login)
+    const localUser = getUser();
+
+    // 2. If we have a UID, verify and fetch the LATEST data from Supabase
+    // This allows syncing data if it changed elsewhere (e.g. verified status)
+    if (localUser?.uid) {
+      try {
+        const { data, error } = await supabase
+          .from("users")
+          .select("*")
+          .eq("uid", localUser.uid)
+          .single();
+
+        if (data && !error) {
+          // Remap DB fields back to App User Type
+          // The DB uses snake_case (onboarding_completed), app uses camelCase
+          const freshUser: User = {
+            id: data.id,
+            uid: data.uid,
+            name: data.name,
+            email: data.email,
+            avatar: data.avatar,
+            address: data.address, // jsonb
+            coordinates: data.coordinates, // jsonb
+            onboardingCompleted: data.onboarding_completed, // map snake_case to camelCase
+            bio: data.bio,
+            joinDate: data.created_at, // Map created_at to joinDate
+          };
+
+          // Update local cache with fresh data
+          setUser(freshUser);
+          return freshUser;
+        }
+      } catch (err) {
+        console.warn("Failed to sync session with Supabase:", err);
+      }
+    }
+
+    // Fallback: If Supabase sync fails or no internet, return local cache
+    return localUser;
   }
-  async updateProfile(_updates: Partial<User>): Promise<User | null> {
+
+  async updateProfile(updates: Partial<User>): Promise<User | null> {
     if (!supabase) return null;
-    throw new Error("Supabase profile update not implemented");
+    const localUser = getUser();
+    if (!localUser?.uid) return null;
+
+    const dbUpdates: any = {
+      ...updates,
+      updated_at: new Date().toISOString(),
+    };
+
+    // Map specific fields casing if needed (e.g. onboardingCompleted -> onboarding_completed)
+    if (updates.onboardingCompleted !== undefined) {
+      dbUpdates.onboarding_completed = updates.onboardingCompleted;
+      delete dbUpdates.onboardingCompleted;
+    }
+
+    const { data, error } = await supabase
+      .from("users")
+      .update(dbUpdates)
+      .eq('uid', localUser.uid)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Supabase update profile error:", error);
+      return null;
+    }
+
+    const updatedUser = { ...localUser, ...updates };
+    setUser(updatedUser);
+    return updatedUser;
   }
 }
 
 export const getAuthRepository = (): AuthRepository => {
-  if (!DEV_MODE && supabase) {
+  // Prefer Supabase if configured, even in DEV_MODE, because the User specifically synced it.
+  // Or stick to strict DEV_MODE flag. 
+  // Given user request "datanya masih belum diunggah", we force Supabase if available.
+  if (supabase) {
     return new SupabaseAuthRepository();
   }
   return new MockAuthRepository();

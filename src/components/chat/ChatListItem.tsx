@@ -3,14 +3,13 @@
 import React from "react";
 import Image from "next/image";
 import { ChatThread } from "@/data/mockChats";
+import { useRouter } from "next/navigation";
+import { formatChatListTime } from "@/utils/dateUtils";
 
 interface ChatListItemProps {
     chat: ChatThread;
 }
 
-import { useRouter } from "next/navigation";
-
-// ... inside the component
 export default function ChatListItem({ chat }: ChatListItemProps) {
     const router = useRouter();
 
@@ -21,11 +20,11 @@ export default function ChatListItem({ chat }: ChatListItemProps) {
         >
             {/* Avatar */}
             <div className="relative w-12 h-12 flex-shrink-0 rounded-full overflow-hidden bg-gray-200 border border-gray-100">
-                {/* Simple logic for mock avatars */}
+                {/* Simple logic for mock avatars/real avatars */}
                 {chat.user.avatar === 'google' ? (
                     <div className="w-full h-full flex items-center justify-center bg-[#FBEF86]">
                         <span className="font-bold text-gray-700 text-lg">
-                            {chat.user.name.charAt(0)}
+                            {chat.user.name ? chat.user.name.charAt(0).toUpperCase() : '?'}
                         </span>
                     </div>
                 ) : (
@@ -47,7 +46,7 @@ export default function ChatListItem({ chat }: ChatListItemProps) {
                                 chat.id === '4' ? 'bg-purple-100' : 'bg-orange-100'
                             }`}>
                             <span className="font-bold text-brand-black text-lg">
-                                {chat.user.name.charAt(0)}
+                                {chat.user.name ? chat.user.name.charAt(0).toUpperCase() : '?'}
                             </span>
                         </div>
                     </div>
@@ -61,7 +60,7 @@ export default function ChatListItem({ chat }: ChatListItemProps) {
                         {chat.user.name}
                     </h3>
                     <span className={`text-xs flex-shrink-0 ${chat.unreadCount > 0 ? "text-brand-red font-medium" : "text-gray-400"}`}>
-                        {chat.timestamp}
+                        {formatChatListTime(chat.timestamp)}
                     </span>
                 </div>
                 <div className="flex justify-between items-center">

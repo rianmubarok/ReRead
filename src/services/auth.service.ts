@@ -10,10 +10,11 @@ export const authService = {
     name: string,
     avatar: string,
     address: Address,
-    email?: string
+    email?: string,
+    uid?: string
   ): Promise<User> => {
     const repo = getAuthRepository();
-    return repo.login(name, avatar, address, email);
+    return repo.login(name, avatar, address, email, uid);
   },
 
   /**

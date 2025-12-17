@@ -42,8 +42,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (name: string, avatar: string, address: Address) => {
     setIsLoading(true);
     try {
-      // authService.login now handles localStorage internally
-      const userData = await authService.login(name, avatar, address);
+      // authService.login now handles localStorage and Supabase internally
+      const uid = user?.uid;
+      const email = user?.email;
+      const userData = await authService.login(name, avatar, address, email, uid);
       setUser(userData);
     } catch (error) {
       console.error("Login failed:", error);
@@ -56,7 +58,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginWithGoogle = async () => {
     setIsLoading(true);
     try {
-      const userData = await loginWithGoogleFirebase();
+      let userData = await loginWithGoogleFirebase();
+
+      // Sync with Supabase: Check if this user actually exists in DB with more data
+      // (e.g. returning user on new device)
+      const syncedUser = await authService.checkSession();
+      if (syncedUser) {
+        userData = syncedUser;
+      }
+
       setUser(userData);
     } catch (error) {
       console.error("Google login failed:", error);

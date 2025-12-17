@@ -105,7 +105,7 @@ export default function StatsPage() {
                 onClick={() =>
                   setExpandedId((prev) => (prev === item.id ? null : item.id))
                 }
-                className="w-full text-left bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex gap-4 hover:border-gray-200 active:scale-[0.99] transition"
+                className="w-full text-left bg-white p-4 rounded-xl border border-gray-100 flex gap-4 hover:border-gray-200 active:scale-[0.99] transition"
               >
                 {/* Book Image */}
                 <div className="relative w-16 h-24 flex-shrink-0 bg-gray-200 rounded-lg overflow-hidden">

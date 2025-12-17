@@ -8,14 +8,18 @@ interface HomeWelcomeProps {
 }
 
 export default function HomeWelcome({ user }: HomeWelcomeProps) {
-    // Use first name for greeting
-    const firstName = user?.name.split(" ")[0] || "Teman";
+    const firstTwoNames =
+        user?.name
+            ?.trim()
+            .split(/\s+/)
+            .slice(0, 2)
+            .join(" ") || "Teman";
 
     return (
         <div className="flex flex-col gap-6 mb-6">
             <div className="space-y-1">
                 <p className="text-sm text-brand-gray font-medium">
-                    Selamat datang kembali, {firstName}!
+                    Selamat datang kembali, {firstTwoNames}!
                 </p>
                 <h1 className="text-2xl font-bold text-brand-black leading-tight">
                     Buku apa yang ingin <br /> kamu cari hari ini?

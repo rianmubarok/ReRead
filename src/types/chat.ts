@@ -39,10 +39,11 @@ export interface DatabaseChatThread {
 export interface ChatMessage {
   id: string;
   text: string;
-  senderId: string; // User ID - will be compared with current user to determine "me" vs "them"
+  senderId: string;
   timestamp: Date;
-  bookId?: string; // Optional: if message is related to a book
-  isRead?: boolean; // Optional: for read status
+  bookId?: string;
+  book?: Book; // Populated book detail
+  isRead?: boolean;
   messageType?: "text" | "exchange_request" | "exchange_completed";
   exchangeRequest?: {
     bookId: string;

@@ -51,3 +51,34 @@ export async function uploadAvatarFromUrl(userId: string, imageUrl: string): Pro
         return null;
     }
 }
+
+export async function uploadBookImage(file: File): Promise<string | null> {
+    if (!supabase) {
+        console.warn("Supabase not configured, skipping book image upload");
+        return null;
+    }
+
+    try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error } = await supabase.storage
+            .from("book-covers")
+            .upload(filePath, file);
+
+        if (error) {
+            console.error("Error uploading book image:", error);
+            return null;
+        }
+
+        const { data } = supabase.storage
+            .from("book-covers")
+            .getPublicUrl(filePath);
+
+        return data.publicUrl;
+    } catch (err) {
+        console.error("Error in uploadBookImage:", err);
+        return null;
+    }
+}

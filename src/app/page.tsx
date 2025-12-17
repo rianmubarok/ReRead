@@ -10,15 +10,18 @@ import HomeHeader from "@/components/home/HomeHeader";
 import SearchBar from "@/components/home/SearchBar";
 import CategoryFilter from "@/components/home/CategoryFilter";
 import BookSection from "@/components/home/BookSection";
-import { MOCK_BOOKS } from "@/data/mockBooks";
 import HomeWelcome from "@/components/home/HomeWelcome";
 import { haversineDistance } from "@/utils/distance";
+import { getBookRepository } from "@/repositories/book.repository";
+import { Book } from "@/types/book";
 
 export default function Home() {
   const { setVisible } = useNav();
   const { isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
 
   const [category, setCategory] = useState("Semua");
+  const [books, setBooks] = useState<Book[]>([]);
+  const [isLoadingBooks, setIsLoadingBooks] = useState(true);
 
   // Initialize state - will be set based on auth status
   const [showSplash, setShowSplash] = useState(false);
@@ -27,6 +30,36 @@ export default function Home() {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [justLoggedIn, setJustLoggedIn] = useState(false);
+
+  // Fetch real books
+  useEffect(() => {
+    const fetchBooks = async () => {
+      if (isAuthenticated && isInitialized) {
+        setIsLoadingBooks(true);
+        try {
+          let allBooks = await getBookRepository().getAllBooks();
+          // Filter out archived books globally for home page
+          allBooks = allBooks.filter(b => (!b.status || b.status === "Available"));
+
+          // Filter out books owned by the current user
+          if (user) {
+            allBooks = allBooks.filter((b) => b.owner.uid !== user.uid && b.owner.id !== user.uid);
+          }
+
+          // Sort by newest
+          allBooks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+          setBooks(allBooks);
+        } catch (error) {
+          console.error("Failed to fetch books", error);
+        } finally {
+          setIsLoadingBooks(false);
+        }
+      }
+    };
+
+    fetchBooks();
+  }, [isAuthenticated, isInitialized]);
 
   useEffect(() => {
     // Immediately hide nav while checking auth to prevent flash
@@ -158,50 +191,62 @@ export default function Home() {
               />
             </div>
 
-            <div
-              className={useComplexAnimation ? "animate-slide-up animate-delay-300" : ""}
-            >
-              <BookSection
-                title="Terdekat"
-                books={(category === "Semua" ? MOCK_BOOKS : MOCK_BOOKS.filter(b => b.category === category))
-                  .filter(b => b.owner.id !== user?.id)
-                  .sort((a, b) => {
-                    const distA = haversineDistance(user?.coordinates, a.owner.coordinates) ?? Infinity;
-                    const distB = haversineDistance(user?.coordinates, b.owner.coordinates) ?? Infinity;
-                    return distA - distB;
-                  })
-                  .slice(0, 8)}
-                variant="nearby"
-                href="/books/nearby"
-              />
-            </div>
+            {/* Loading Books Indicator */}
+            {isLoadingBooks && (
+              <div className="flex justify-center py-10">
+                <div className="w-6 h-6 border-2 border-gray-200 border-t-brand-black rounded-full animate-spin"></div>
+              </div>
+            )}
 
-            <div
-              className={useComplexAnimation ? "animate-slide-up animate-delay-400" : ""}
-            >
-              <BookSection
-                title="Baru Ditambahkan"
-                books={(category === "Semua" ? MOCK_BOOKS : MOCK_BOOKS.filter(b => b.category === category))
-                  .filter(b => b.owner.id !== user?.id)
-                  .slice(0, 8)}
-                variant="trending"
-                href="/books/recent"
-              />
-            </div>
+            {!isLoadingBooks && (
+              <>
+                <div
+                  className={useComplexAnimation ? "animate-slide-up animate-delay-300" : ""}
+                >
+                  <BookSection
+                    title="Terdekat"
+                    books={(category === "Semua" ? books : books.filter(b => b.category === category))
+                      .filter(b => b.owner.id !== user?.id)
+                      .sort((a, b) => {
+                        const distA = haversineDistance(user?.coordinates, a.owner.coordinates) ?? Infinity;
+                        const distB = haversineDistance(user?.coordinates, b.owner.coordinates) ?? Infinity;
+                        return distA - distB;
+                      })
+                      .slice(0, 8)}
+                    variant="nearby"
+                    href="/books/nearby"
+                  />
+                </div>
 
-            <div
-              className={useComplexAnimation ? "animate-slide-up animate-delay-500" : ""}
-            >
-              <BookSection
-                title="Siap Dipinjam / Gratis"
-                books={MOCK_BOOKS.filter(b =>
-                  (!b.price || b.price === 0) &&
-                  (category === "Semua" || b.category === category) &&
-                  b.owner.id !== user?.id
-                ).slice(0, 8)}
-                href="/books/free"
-              />
-            </div>
+                <div
+                  className={useComplexAnimation ? "animate-slide-up animate-delay-400" : ""}
+                >
+                  <BookSection
+                    title="Baru Ditambahkan"
+                    books={(category === "Semua" ? books : books.filter(b => b.category === category))
+                      .filter(b => b.owner.id !== user?.id)
+                      .slice(0, 8)} // Already sorted by created_at in repo logic? Need to verify repo default sort.
+                    variant="trending"
+                    href="/books/recent"
+                  />
+                </div>
+
+                <div
+                  className={useComplexAnimation ? "animate-slide-up animate-delay-500" : ""}
+                >
+                  <BookSection
+                    title="Siap Dipinjam / Gratis"
+                    books={books.filter(b =>
+                      (!b.exchangeMethods?.length || b.exchangeMethods.includes("Gratis / Dipinjamkan")) && // Check based on new schema
+                      (category === "Semua" || b.category === category) &&
+                      b.owner.id !== user?.id
+                    ).slice(0, 8)}
+                    href="/books/free"
+                  />
+                </div>
+              </>
+            )}
+
           </div>
         </div>
       </>
@@ -209,10 +254,7 @@ export default function Home() {
   }
 
   // Show onboarding flow for unauthenticated users
-  // This should only render after isInitialized is true and user is not authenticated
-  // Ensure at least splash screen is shown
   if (!showSplash && !showWalkthrough && !showSignIn) {
-    // This should not happen, but force show splash as fallback
     return <SplashScreen onFinish={handleSplashFinish} />;
   }
 

@@ -16,10 +16,7 @@ export type BookCondition = "Baru" | "Baik" | "Bekas";
 export type ExchangeMethod =
   | "Nego"
   | "Barter"
-  | "Gratis"
-  | "Gratis / Dipinjamkan"
-  | "COD"
-  | "Kirim";
+  | "Gratis / Dipinjamkan";
 
 export interface Book {
   id: string;
@@ -30,11 +27,10 @@ export interface Book {
   category: BookCategory;
   condition: BookCondition;
   owner: User;
-  price?: number;
   exchangeMethods?: ExchangeMethod[];
   createdAt: string;
   locationLabel?: string;
   distanceLabel?: string;
   coordinates?: User["coordinates"];
-  isTrending?: boolean;
+  status?: "Available" | "Archived";
 }

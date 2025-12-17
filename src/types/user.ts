@@ -18,9 +18,9 @@ export interface User {
   avatar?: string;
   address?: Address;
   coordinates?: Coordinates;
+  bio?: string;
   locationLabel?: string;
   isVerified?: boolean;
   joinDate?: string;
-  bio?: string;
   onboardingCompleted: boolean;
 }

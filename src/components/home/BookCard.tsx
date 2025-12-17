@@ -39,47 +39,40 @@ export default function BookCard({ book, variant = "nearby", className, fullWidt
     }
 
     return (
-        <Link
-            href={`/book/${book.id}`}
-            className={`flex-shrink-0 flex flex-col gap-3 group cursor-pointer active:scale-95 transition-transform ${fullWidth ? "w-full" : "w-36"} ${className || ""}`}
-        >
-            {/* Cover Image */}
-            {/* Cover Image */}
+        <div className={`flex-shrink-0 flex flex-col gap-3 group cursor-pointer transition-transform ${fullWidth ? "w-full" : "w-36"} ${className || ""}`}>
+            {/* Cover Image Container */}
             <div className="relative aspect-[2/3]">
-                <div className="absolute inset-0 rounded-xl overflow-hidden bg-gray-200 flex items-center justify-center">
-                    {book.image ? (
-                        <Image
-                            src={book.image}
-                            alt={book.title}
-                            fill
-                            className="object-cover group-hover:scale-105 transition-transform duration-500"
-                            sizes="(max-width: 768px) 150px, 200px"
-                        />
-                    ) : (
-                        <div className="p-2 text-center">
-                            <span className="text-2xl font-bold text-gray-400 block mb-1">
-                                {book.title.charAt(0)}
-                            </span>
-                        </div>
-                    )}
-                </div>
+                {/* Main Link Area */}
+                <Link href={`/book/${book.id}`} className="absolute inset-0 z-0 block w-full h-full active:scale-95 transition-transform duration-200">
+                    <div className="w-full h-full rounded-xl overflow-hidden bg-gray-200 flex items-center justify-center relative">
+                        {book.image ? (
+                            <Image
+                                src={book.image}
+                                alt={book.title}
+                                fill
+                                className="object-cover group-hover:scale-105 transition-transform duration-500"
+                                sizes="(max-width: 768px) 150px, 200px"
+                            />
+                        ) : (
+                            <div className="p-2 text-center">
+                                <span className="text-2xl font-bold text-gray-400 block mb-1">
+                                    {book.title.charAt(0)}
+                                </span>
+                            </div>
+                        )}
+                    </div>
+                </Link>
 
-                {/* Action Overlay */}
+                {/* Action Overlay (Outside Link) */}
                 {actionOverlay && (
-                    <div
-                        className="absolute top-2 right-2 z-10"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }}
-                    >
+                    <div className="absolute top-2 right-2 z-10">
                         {actionOverlay}
                     </div>
                 )}
             </div>
 
-            {/* Info */}
-            <div className="space-y-1">
+            {/* Info Section */}
+            <Link href={`/book/${book.id}`} className="space-y-1 block active:scale-95 transition-transform duration-200">
                 <h3 className="font-bold text-brand-black line-clamp-1">
                     {book.title}
                 </h3>
@@ -88,7 +81,7 @@ export default function BookCard({ book, variant = "nearby", className, fullWidt
                     <RiMapPinLine className="w-3 h-3 mt-0.5 flex-shrink-0" />
                     <span className="line-clamp-1">{displayLocation}</span>
                 </div>
-            </div>
-        </Link>
+            </Link>
+        </div>
     );
 }

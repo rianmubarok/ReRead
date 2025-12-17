@@ -68,3 +68,28 @@ export function formatChatDate(date: Date): string {
         year: "numeric"
     });
 }
+
+export function formatChatListTime(dateInput: Date | string): string {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    if (isNaN(date.getTime())) return "";
+
+    const now = new Date();
+    const isToday = now.toDateString() === date.toDateString();
+
+    // Check if yesterday
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday = yesterday.toDateString() === date.toDateString();
+
+    if (isToday) {
+        return formatMessageTime(date); // HH:mm
+    }
+    if (isYesterday) {
+        return "Kemarin";
+    }
+    return date.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "numeric",
+        year: "2-digit"
+    }); // DD/MM/YY
+}

@@ -38,20 +38,26 @@ export default function BookSection({ title, books, variant = "nearby", href }: 
                 )}
             </div>
 
-            {/* Grid/List */}
-            <div
-                {...events}
-                ref={ref}
-                className={`flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar
-                    ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
-                `}
-            >
-                {books.map((book) => (
-                    <div key={book.id} className="flex-shrink-0">
-                        <BookCard book={book} variant={variant} />
-                    </div>
-                ))}
-            </div>
+            {/* Grid/List or Empty State */}
+            {books.length > 0 ? (
+                <div
+                    {...events}
+                    ref={ref}
+                    className={`flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar
+                        ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}
+                    `}
+                >
+                    {books.map((book) => (
+                        <div key={book.id} className="flex-shrink-0">
+                            <BookCard book={book} variant={variant} />
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <div className="bg-gray-50 rounded-xl p-6 text-center text-brand-gray text-sm">
+                    Belum ada buku di kategori ini
+                </div>
+            )}
         </div>
     );
 }

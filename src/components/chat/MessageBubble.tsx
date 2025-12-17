@@ -18,9 +18,9 @@ interface MessageBubbleProps {
 
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message, user, currentUserId, onAction }) => {
     const isMe = isMessageFromMe(message, currentUserId);
-    const messageBook = message.bookId
+    const messageBook = message.book || (message.bookId
         ? MOCK_BOOKS.find((b) => b.id === message.bookId)
-        : null;
+        : null);
 
     return (
         <div
@@ -135,7 +135,7 @@ const MessageBubble: React.FC<MessageBubbleProps> = ({ message, user, currentUse
                             className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${isMe
                                 ? "bg-brand-red text-white rounded-br-sm"
                                 : !isMe && message.isRead === false
-                                    ? "bg-red-50/50 text-brand-black border border-red-200 rounded-bl-sm shadow-sm font-medium"
+                                    ? "bg-red-50/50 text-brand-black border border-red-200 rounded-bl-sm font-medium"
                                     : "bg-white text-gray-800 border border-gray-100 rounded-bl-sm"
                                 }`}
                         >

@@ -1,18 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { RiArrowLeftLine, RiImageAddLine } from "@remixicon/react";
 import { useAuth } from "@/context/AuthContext";
-import { MOCK_BOOKS } from "@/data/mockBooks";
-import { Book, ExchangeMethod } from "@/types/book";
+import { useNav } from "@/context/NavContext";
+import { ExchangeMethod } from "@/types/book";
 import toast from "react-hot-toast";
 import SearchableDropdown from "@/components/ui/SearchableDropdown";
+import { uploadBookImage } from "@/services/storage.service";
+import { getBookRepository } from "@/repositories/book.repository";
 
 export default function AddBookPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { setVisible } = useNav();
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setVisible(false);
+  }, [setVisible]);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -23,7 +30,22 @@ export default function AddBookPage() {
     exchangeMethods: [] as ExchangeMethod[],
   });
 
-  const categories = ["Fiksi", "Non-Fiksi", "Pendidikan", "Komik", "Sastra"];
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const categories = [
+    "Fiksi",
+    "Non-Fiksi",
+    "Pendidikan",
+    "Komik",
+    "Sastra",
+    "Biografi",
+    "Teknologi",
+    "Seni",
+    "Agama",
+    "Hobi",
+  ];
   const conditions = ["Baru", "Baik", "Bekas"];
   const exchangeOptions: ExchangeMethod[] = [
     "Gratis / Dipinjamkan",
@@ -53,6 +75,14 @@ export default function AddBookPage() {
     });
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -78,48 +108,49 @@ export default function AddBookPage() {
       return;
     }
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
     if (user) {
-      const locationLabel = user.address
-        ? `${user.address.district}, ${user.address.regency}`
-        : "Lokasi tidak diketahui";
+      try {
+        let imageUrl = "";
+        if (imageFile) {
+          const uploadedUrl = await uploadBookImage(imageFile);
+          if (uploadedUrl) {
+            imageUrl = uploadedUrl;
+          } else {
+            toast.error(
+              "Gagal mengunggah gambar. Mencoba menyimpan tanpa gambar."
+            );
+          }
+        }
 
-      const newBook: Book = {
-        id: Math.random().toString(36).substr(2, 9),
-        title: formData.title,
-        author: formData.author,
-        image: "", // TODO: Handle image upload
-        category: formData.category as any,
-        description: formData.description,
-        condition: formData.condition as any,
-        owner: {
-          id: user.id,
-          uid: user.uid,
-          name: user.name,
-          avatar: user.avatar || "default-avatar.png",
-          address: user.address,
-          coordinates: user.coordinates,
-          onboardingCompleted: user.onboardingCompleted ?? true,
-          locationLabel: user.locationLabel || locationLabel,
-          isVerified: user.isVerified ?? true,
-          joinDate: user.joinDate || "2024",
-        },
-        exchangeMethods: formData.exchangeMethods,
-        createdAt: "Baru saja",
-        locationLabel,
-        distanceLabel: "0 km",
-      };
+        const locationLabel = user.address
+          ? `${user.address.district}, ${user.address.regency}`
+          : "Lokasi tidak diketahui";
 
-      // In-memory update for demo purposes
-      // Note: This will reset on page reload/recompile
-      MOCK_BOOKS.unshift(newBook);
+        await getBookRepository().createBook({
+          title: formData.title,
+          author: formData.author,
+          image: imageUrl,
+          category: formData.category as any,
+          description: formData.description,
+          condition: formData.condition as any,
+          owner: {
+            ...user,
+            id: user.id || "",
+          } as any,
+          exchangeMethods: formData.exchangeMethods,
+          createdAt: new Date().toISOString(),
+          locationLabel,
+          distanceLabel: "0 km",
+        });
 
-      toast.success("Buku berhasil ditambahkan!");
+        toast.success("Buku berhasil ditambahkan!");
 
-      // Navigate back to previous page (My Books)
-      router.back();
+        router.back();
+      } catch (error) {
+        console.error("Failed to create book:", error);
+        toast.error("Gagal menambahkan buku");
+        setIsLoading(false);
+      }
     } else {
       toast.error("Silakan login terlebih dahulu");
       setIsLoading(false);
@@ -146,9 +177,29 @@ export default function AddBookPage() {
       <div className="pt-24 px-6 max-w-md mx-auto">
         <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           {/* Image Placeholder */}
-          <div className="w-full aspect-[3/4] max-h-64 bg-gray-100 rounded-xl flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer">
-            <RiImageAddLine className="w-12 h-12 mb-2" />
-            <span className="text-sm font-medium">Unggah Foto Buku</span>
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full aspect-[3/4] max-h-64 bg-gray-100 rounded-xl flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-300 hover:bg-gray-50 transition-colors cursor-pointer overflow-hidden relative"
+          >
+            {imagePreview ? (
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <>
+                <RiImageAddLine className="w-12 h-12 mb-2" />
+                <span className="text-sm font-medium">Unggah Foto Buku</span>
+              </>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageSelect}
+              accept="image/*"
+              className="hidden"
+            />
           </div>
 
           {/* Title */}
@@ -227,11 +278,10 @@ export default function AddBookPage() {
                     type="button"
                     onClick={() => toggleExchangeMethod(method)}
                     className={`px-4 py-2 rounded-full text-sm font-medium border transition-all
-                                            ${
-                                              isSelected
-                                                ? "bg-brand-black text-white border-brand-black"
-                                                : "bg-white text-brand-gray border-gray-200 hover:border-brand-black"
-                                            }`}
+                                            ${isSelected
+                        ? "bg-brand-black text-white border-brand-black"
+                        : "bg-white text-brand-gray border-gray-200 hover:border-brand-black"
+                      }`}
                   >
                     {method}
                   </button>
@@ -260,9 +310,8 @@ export default function AddBookPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className={`w-full bg-brand-black text-white font-bold py-4 rounded-full transition-all active:scale-95 ${
-              isLoading ? "opacity-70 cursor-wait" : "hover:scale-[1.02]"
-            }`}
+            className={`w-full bg-brand-black text-white font-bold py-4 rounded-full transition-all active:scale-95 ${isLoading ? "opacity-70 cursor-wait" : "hover:scale-[1.02]"
+              }`}
           >
             {isLoading ? "Menambahkan..." : "Tambah Buku"}
           </button>
