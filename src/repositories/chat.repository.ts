@@ -109,8 +109,24 @@ class SupabaseChatRepository implements ChatRepository {
 
     if (!data || data.length === 0) return [];
 
-    // Show all threads, even if no message yet (e.g. freshly created or RLS update failed)
-    const validThreads = data;
+    // Filter out threads with no messages (empty threads created but never used)
+    // Only show threads that have at least one message
+    const threadIds = data.map(t => t.id);
+    let messageCountMap = new Map<string, number>();
+
+    if (threadIds.length > 0) {
+      const { data: messageCounts } = await supabase
+        .from('chat_messages')
+        .select('chat_id')
+        .in('chat_id', threadIds);
+
+      messageCounts?.forEach((msg: any) => {
+        messageCountMap.set(msg.chat_id, (messageCountMap.get(msg.chat_id) || 0) + 1);
+      });
+    }
+
+    // Only include threads that have at least one message
+    const validThreads = data.filter(t => (messageCountMap.get(t.id) || 0) > 0);
 
     if (validThreads.length === 0) return [];
 
@@ -119,14 +135,14 @@ class SupabaseChatRepository implements ChatRepository {
     const userMap = await this.fetchUsers(partnerIds);
 
     // 3. Fetch unread counts
-    const threadIds = validThreads.map(t => t.id);
+    const validThreadIds = validThreads.map(t => t.id);
     let unreadMap = new Map<string, number>();
 
-    if (threadIds.length > 0) {
+    if (validThreadIds.length > 0) {
       const { data: unreadData } = await supabase
         .from('chat_messages')
         .select('chat_id')
-        .in('chat_id', threadIds)
+        .in('chat_id', validThreadIds)
         .eq('is_read', false)
         .neq('sender_id', currentUserId);
 

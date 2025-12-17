@@ -1,7 +1,8 @@
+"use client";
+
 import React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import toast from "react-hot-toast";
 import {
   RiBookOpenLine,
   RiCloseLine,
@@ -43,14 +44,16 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
   const permissionStatusRef = React.useRef<PermissionStatus | null>(null);
 
   const updateLocation = (lat: number, lng: number) => {
-    console.log("Updating location to:", { lat, lng });
-    setCoordinates({ lat, lng });
+    const coords = { lat, lng };
+    setCoordinates(coords);
     setLocationEnabled(true);
     setIsLoading(false);
 
+    // Save to localStorage for persistence
+    localStorage.setItem("user_coordinates", JSON.stringify(coords));
+
     // Update global user context so distances are recalculated
-    updateUser({ coordinates: { lat, lng } });
-    toast.success("Lokasi berhasil diperbarui!", { id: "refresh-location" });
+    updateUser({ coordinates: coords });
   };
 
   const requestLocation = () => {
@@ -65,26 +68,13 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
             console.warn("Location error:", error.message);
             setLocationEnabled(false);
             setIsLoading(false);
-
-            let errorMessage = "Gagal mendapatkan lokasi";
-            if (error.code === error.PERMISSION_DENIED) {
-              errorMessage = "Izin lokasi ditolak";
-            } else if (error.code === error.POSITION_UNAVAILABLE) {
-              errorMessage = "Lokasi tidak tersedia";
-            } else if (error.code === error.TIMEOUT) {
-              errorMessage = "Waktu permintaan lokasi habis";
-            }
-            toast.error(errorMessage);
           },
           { timeout: 10000, maximumAge: 0, enableHighAccuracy: true }
         );
       } catch (error) {
         console.error("Error requesting location permission:", error);
         setIsLoading(false);
-        toast.error("Gagal meminta izin lokasi");
       }
-    } else {
-      toast.error("Browser tidak mendukung geolokasi");
     }
   };
 
@@ -93,7 +83,6 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
 
     if (locationEnabled) {
       setLocationEnabled(false);
-      toast("Lokasi dinonaktifkan");
       return;
     }
 
@@ -103,7 +92,6 @@ export default function HomeDrawer({ isOpen, onClose, user }: HomeDrawerProps) {
   const handleRefreshLocation = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isLoading) return;
-    toast.loading("Memperbarui lokasi...", { id: "refresh-location" });
     requestLocation();
   };
 

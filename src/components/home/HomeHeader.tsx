@@ -11,8 +11,6 @@ interface HomeHeaderProps {
 }
 
 export default function HomeHeader({ user }: HomeHeaderProps) {
-    // Use first name for greeting
-    const firstName = user?.name.split(" ")[0] || "Teman";
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
     return (

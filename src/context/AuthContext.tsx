@@ -9,7 +9,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (name: string, avatar: string, address: Address, coordinates?: { lat: number; lng: number }) => Promise<void>;
+  login: (name: string, avatar: string, address: Address) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (updates: Partial<User>) => Promise<void>;
@@ -39,13 +39,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth();
   }, []);
 
-  const login = async (name: string, avatar: string, address: Address, coordinates?: { lat: number; lng: number }) => {
+  const login = async (name: string, avatar: string, address: Address) => {
     setIsLoading(true);
     try {
       // authService.login now handles localStorage and Supabase internally
       const uid = user?.uid;
       const email = user?.email;
-      const userData = await authService.login(name, avatar, address, email, uid, coordinates);
+      const userData = await authService.login(name, avatar, address, email, uid);
       setUser(userData);
     } catch (error) {
       console.error("Login failed:", error);

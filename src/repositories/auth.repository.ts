@@ -42,8 +42,7 @@ export interface AuthRepository {
     avatar: string,
     address: Address,
     email?: string,
-    uid?: string,
-    coordinates?: { lat: number; lng: number }
+    uid?: string
   ): Promise<User>;
   logout(): Promise<void>;
   checkSession(): Promise<User | null>;
@@ -56,16 +55,36 @@ class MockAuthRepository implements AuthRepository {
     avatar: string,
     address: Address,
     email?: string,
-    existingUid?: string,
-    coordinates?: { lat: number; lng: number }
+    existingUid?: string
   ): Promise<User> {
     await maybeDelay(300);
     const uid = existingUid || generateId("dev-user");
-    const district = address?.district;
-    const finalCoordinates = coordinates ||
-      (district && DISTRICT_COORDS[district]
-        ? DISTRICT_COORDS[district]
-        : { lat: -6.5818, lng: 110.6684 });
+
+    // Try to get real GPS coordinates from localStorage first
+    let coordinates: Coordinates;
+    try {
+      const savedCoords = localStorage.getItem("user_coordinates");
+      if (savedCoords) {
+        coordinates = JSON.parse(savedCoords);
+        console.log("Using real GPS coordinates:", coordinates);
+      } else {
+        // Fallback to district-based coordinates
+        const district = address?.district;
+        coordinates =
+          district && DISTRICT_COORDS[district]
+            ? DISTRICT_COORDS[district]
+            : { lat: -6.5818, lng: 110.6684 };
+        console.log("Using district-based coordinates:", coordinates);
+      }
+    } catch (error) {
+      console.error("Error reading coordinates from localStorage:", error);
+      // Fallback to district-based coordinates
+      const district = address?.district;
+      coordinates =
+        district && DISTRICT_COORDS[district]
+          ? DISTRICT_COORDS[district]
+          : { lat: -6.5818, lng: 110.6684 };
+    }
 
     const userData: User = {
       id: uid,
@@ -74,7 +93,7 @@ class MockAuthRepository implements AuthRepository {
       email: email || `test@mail.com`,
       avatar,
       address,
-      coordinates: finalCoordinates,
+      coordinates,
       onboardingCompleted: true,
     };
     if (DEV_MODE) {
@@ -122,19 +141,37 @@ class SupabaseAuthRepository implements AuthRepository {
     avatar: string,
     address: Address,
     email?: string,
-    uid?: string,
-    coordinates?: { lat: number; lng: number }
+    uid?: string
   ): Promise<User> {
     if (!supabase) throw new Error("Supabase not configured");
 
     const userId = uid || generateId("user");
 
-    // Determine coordinates based on district or use provided coordinates
-    const district = address?.district;
-    const finalCoordinates = coordinates ||
-      (district && DISTRICT_COORDS[district]
-        ? DISTRICT_COORDS[district]
-        : { lat: -6.5818, lng: 110.6684 }); // Default to Jepara logic
+    // Try to get real GPS coordinates from localStorage first
+    let coordinates: Coordinates;
+    try {
+      const savedCoords = localStorage.getItem("user_coordinates");
+      if (savedCoords) {
+        coordinates = JSON.parse(savedCoords);
+        console.log("Using real GPS coordinates for Supabase:", coordinates);
+      } else {
+        // Fallback to district-based coordinates
+        const district = address?.district;
+        coordinates =
+          district && DISTRICT_COORDS[district]
+            ? DISTRICT_COORDS[district]
+            : { lat: -6.5818, lng: 110.6684 };
+        console.log("Using district-based coordinates for Supabase:", coordinates);
+      }
+    } catch (error) {
+      console.error("Error reading coordinates from localStorage:", error);
+      // Fallback to district-based coordinates
+      const district = address?.district;
+      coordinates =
+        district && DISTRICT_COORDS[district]
+          ? DISTRICT_COORDS[district]
+          : { lat: -6.5818, lng: 110.6684 };
+    }
 
     const updates = {
       uid: userId, // store in uid col to match firebase
@@ -142,7 +179,7 @@ class SupabaseAuthRepository implements AuthRepository {
       email,
       avatar,
       address,       // storing specific fields as json is fine or separate cols
-      coordinates: finalCoordinates,
+      coordinates,
       onboarding_completed: true,
       updated_at: new Date().toISOString(),
     };
@@ -168,7 +205,7 @@ class SupabaseAuthRepository implements AuthRepository {
       email,
       avatar,
       address,
-      coordinates: finalCoordinates,
+      coordinates,
       onboardingCompleted: true,
     };
 

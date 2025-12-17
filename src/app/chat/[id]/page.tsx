@@ -15,6 +15,7 @@ import toast from "react-hot-toast";
 import { getChatRepository } from "@/repositories/chat.repository";
 import { getBookRepository } from "@/repositories/book.repository";
 import { getTransactionRepository } from "@/repositories/transaction.repository";
+import { supabase } from "@/lib/supabase";
 
 export default function ChatDetailPage() {
   const { setVisible } = useNav();
@@ -29,6 +30,8 @@ export default function ChatDetailPage() {
   const [thread, setThread] = useState<ChatThread | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [targetUserId, setTargetUserId] = useState<string | null>(null); // Store target user ID for lazy creation
+  const [targetUser, setTargetUser] = useState<any>(null); // Store target user info for display
 
   // Book Context State
   const [contextBook, setContextBook] = useState<Book | null>(null);
@@ -49,20 +52,8 @@ export default function ChatDetailPage() {
       setIsLoading(true);
 
       try {
-        // A. Resolve Thread (Find by ID or UserID, or Create if UserID)
+        // A. Try to find existing thread (DON'T create if not found)
         let resolvedThread = await getChatRepository().getChatThread(paramId, currentUser.uid);
-
-        // If not found, and paramId looks like a UserID, try to create/ensure thread exists
-        if (!resolvedThread) {
-          // Check if paramId is a potential UserID (not a UUID format check strictly, but let's try create)
-          // If getChatThread returned null, it implies no thread found. 
-          // If paramId is actually a valid UserID, createChatThread will handle "find or create".
-          try {
-            resolvedThread = await getChatRepository().createChatThread(paramId, currentUser.uid);
-          } catch (createErr) {
-            console.warn("Failed to create thread, paramId might not be a valid UserID", createErr);
-          }
-        }
 
         if (resolvedThread) {
           setThread(resolvedThread);
@@ -75,15 +66,22 @@ export default function ChatDetailPage() {
           if (currentUser?.uid) {
             await getChatRepository().markAsRead(resolvedThread.id, currentUser.uid);
           }
+        } else {
+          // Thread not found - store target user ID for lazy creation
+          // Check if paramId is a UUID (existing thread ID) or UID (user ID)
+          const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(paramId);
+
+          if (!isUuid) {
+            // paramId is likely a user UID - store it for lazy thread creation
+            setTargetUserId(paramId);
+          }
         }
 
-        // C. Load Book Context if provided
+        // D. Load Book Context if provided
         if (bookIdParam) {
           const book = await getBookRepository().getBookById(bookIdParam);
           if (book) {
             setContextBook(book);
-            // Show context only if no messages yet or explicit intent?
-            // Usually show if bookId is passed
             setShowBookContext(true);
           }
         }
@@ -98,6 +96,29 @@ export default function ChatDetailPage() {
 
     init();
   }, [currentUser, paramId, bookIdParam]);
+
+  // 1.5. Fetch Target User Info (for lazy thread creation)
+  useEffect(() => {
+    const fetchTargetUser = async () => {
+      if (!targetUserId || !supabase) return;
+
+      try {
+        const { data } = await supabase
+          .from('users')
+          .select('*')
+          .eq('uid', targetUserId)
+          .single();
+
+        if (data) {
+          setTargetUser(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch target user:", error);
+      }
+    };
+
+    fetchTargetUser();
+  }, [targetUserId]);
 
   // 2. Realtime Polling
   useEffect(() => {
@@ -141,7 +162,27 @@ export default function ChatDetailPage() {
 
 
   const handleSendMessage = async (text: string, options?: any) => {
-    if (!text.trim() || !thread || !currentUser?.uid) return;
+    if (!text.trim() || !currentUser?.uid) return;
+
+    // Lazy Thread Creation: If no thread exists but we have targetUserId, create it now
+    let activeThread = thread;
+    if (!activeThread && targetUserId) {
+      try {
+        const newThread = await getChatRepository().createChatThread(targetUserId, currentUser.uid);
+        setThread(newThread);
+        activeThread = newThread;
+      } catch (error) {
+        console.error("Failed to create thread:", error);
+        toast.error("Gagal membuat percakapan");
+        return;
+      }
+    }
+
+    // If still no thread, can't send message
+    if (!activeThread) {
+      toast.error("Percakapan tidak ditemukan");
+      return;
+    }
 
     // Optimistic Update
     const tempId = `temp-${Date.now()}`;
@@ -159,7 +200,7 @@ export default function ChatDetailPage() {
 
     try {
       const sentMsg = await getChatRepository().sendMessage(
-        thread.id,
+        activeThread.id,
         text,
         currentUser.uid,
         {
@@ -269,7 +310,9 @@ export default function ChatDetailPage() {
     );
   }
 
-  if (!thread) {
+  // If no thread but we have targetUserId, we can still render the chat UI
+  // The thread will be created when user sends first message
+  if (!thread && !targetUserId) {
     return (
       <div className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
         <div className="text-gray-400 text-sm">Percakapan tidak ditemukan.</div>
@@ -277,12 +320,18 @@ export default function ChatDetailPage() {
     );
   }
 
+  // Prepare display data - use thread user if exists, otherwise use target user
+  const displayUser = thread?.user || (targetUser ? {
+    name: targetUser.name || "Pengguna",
+    avatar: targetUser.avatar || ""
+  } : { name: "Pengguna", avatar: "" });
+
   return (
     <div className="flex flex-col h-screen bg-[#F8F9FA]">
       <ChatDetailHeader
-        name={thread.user.name}
+        name={displayUser.name}
         status="Online"
-        avatar={thread.user.avatar || 'google'}
+        avatar={displayUser.avatar || 'google'}
         hasPendingExchange={false}
       />
 
@@ -291,7 +340,7 @@ export default function ChatDetailPage() {
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-gray-400 text-sm space-y-1 min-h-[200px]">
             <p>Belum ada pesan.</p>
-            <p>Mulai percakapan dengan {thread.user.name}</p>
+            <p>Mulai percakapan dengan {displayUser.name}</p>
           </div>
         ) : (
           <div className="mt-auto space-y-3 pb-4">
@@ -314,8 +363,8 @@ export default function ChatDetailPage() {
                     <MessageBubble
                       message={msg}
                       user={{
-                        name: thread.user.name,
-                        avatar: thread.user.avatar || 'google'
+                        name: displayUser.name,
+                        avatar: displayUser.avatar || 'google'
                       }}
                       currentUserId={currentUser.uid}
                       onAction={handleAction}

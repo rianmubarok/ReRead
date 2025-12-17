@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { TOTAL_STEPS } from "./constants";
 import Step1NameAddress from "./Step1NameAddress";
@@ -16,7 +15,6 @@ interface SignInFormProps {
 
 export default function SignInForm({ onFinish }: SignInFormProps) {
   const { login, loginWithGoogle, user } = useAuth();
-  const router = useRouter();
   const [step, setStep] = useState(1);
   const [displayStep, setDisplayStep] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
@@ -24,7 +22,6 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
   const [selectedAvatar, setSelectedAvatar] = useState<string>("google");
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [userCoordinates, setUserCoordinates] = useState<{ lat: number; lng: number } | null>(null);
 
   // Pre-fill name from Google account if available
   useEffect(() => {
@@ -32,20 +29,6 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
       setName(user.name);
     }
   }, [user, name]);
-
-  // Prevent navigation away from onboarding
-  useEffect(() => {
-    const handleRouteChange = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      e.returnValue = "";
-    };
-
-    window.addEventListener("beforeunload", handleRouteChange);
-
-    return () => {
-      window.removeEventListener("beforeunload", handleRouteChange);
-    };
-  }, []);
 
   const addressData = useAddressData();
   const {
@@ -66,10 +49,6 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
     } finally {
       setIsGoogleLoading(false);
     }
-  };
-
-  const handleLocationGranted = (coords: { lat: number; lng: number }) => {
-    setUserCoordinates(coords);
   };
 
   // Handle step transition with animation
@@ -122,17 +101,12 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
           ? user.avatar
           : selectedAvatar;
 
-        await login(
-          name,
-          finalAvatar,
-          {
-            province: provinceName,
-            regency: regencyName,
-            district: districtName,
-            village: villageName,
-          },
-          userCoordinates || undefined
-        );
+        await login(name, finalAvatar, {
+          province: provinceName,
+          regency: regencyName,
+          district: districtName,
+          village: villageName,
+        });
         onFinish();
       } catch (error) {
         console.error("Login Error", error);
@@ -187,7 +161,7 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
             />
           )}
 
-          {displayStep === 3 && <Step3Location onLocationGranted={handleLocationGranted} />}
+          {displayStep === 3 && <Step3Location />}
         </div>
       </div>
 
@@ -205,7 +179,7 @@ export default function SignInForm({ onFinish }: SignInFormProps) {
           disabled={isLoading}
           className="flex-1"
         >
-          {isLoading ? "Memproses..." : step === TOTAL_STEPS ? "Selesai" : "Lanjut"}
+          {isLoading ? "Memproses..." : "Lanjut"}
         </Button>
       </BottomContainer>
     </div>

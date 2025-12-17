@@ -9,17 +9,17 @@ import { RiPencilLine } from "@remixicon/react";
 
 interface ActionButtonsProps {
     bookId: string;
-    ownerId: string;
+    ownerUid: string;
 }
 
-export default function ActionButtons({ bookId, ownerId }: ActionButtonsProps) {
+export default function ActionButtons({ bookId, ownerUid }: ActionButtonsProps) {
     const router = useRouter();
     const { user } = useAuth();
 
-    const isOwner = user?.id === ownerId;
+    const isOwner = user?.uid === ownerUid;
 
     const handleSendMessage = () => {
-        router.push(`/chat/${ownerId}?bookId=${bookId}`);
+        router.push(`/chat/${ownerUid}?bookId=${bookId}`);
     };
 
     const handleEditBook = () => {
@@ -48,7 +48,7 @@ export default function ActionButtons({ bookId, ownerId }: ActionButtonsProps) {
                 variant="outline"
                 fullWidth
                 className="flex-1"
-                onClick={() => router.push(`/profile/${ownerId}`)}
+                onClick={() => router.push(`/profile/${ownerUid}`)}
             >
                 Lihat Profil
             </Button>
