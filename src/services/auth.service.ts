@@ -11,10 +11,11 @@ export const authService = {
     avatar: string,
     address: Address,
     email?: string,
-    uid?: string
+    uid?: string,
+    coordinates?: { lat: number; lng: number }
   ): Promise<User> => {
     const repo = getAuthRepository();
-    return repo.login(name, avatar, address, email, uid);
+    return repo.login(name, avatar, address, email, uid, coordinates);
   },
 
   /**

@@ -115,6 +115,24 @@ export default function Home() {
     isInitialized,
   ]);
 
+  // Block navigation to other routes during onboarding
+  useEffect(() => {
+    if (!isAuthLoading && isAuthenticated && !user?.onboardingCompleted) {
+      // User is authenticated but hasn't completed onboarding
+      // This prevents them from navigating to other pages
+      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+        e.preventDefault();
+        e.returnValue = "";
+      };
+
+      window.addEventListener("beforeunload", handleBeforeUnload);
+
+      return () => {
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+      };
+    }
+  }, [isAuthLoading, isAuthenticated, user?.onboardingCompleted]);
+
   const handleSplashFinish = () => {
     if (isAuthenticated) return; // Should be handled by effect, but safety
     setShowSplash(false);

@@ -42,7 +42,8 @@ export interface AuthRepository {
     avatar: string,
     address: Address,
     email?: string,
-    uid?: string
+    uid?: string,
+    coordinates?: { lat: number; lng: number }
   ): Promise<User>;
   logout(): Promise<void>;
   checkSession(): Promise<User | null>;
@@ -55,15 +56,16 @@ class MockAuthRepository implements AuthRepository {
     avatar: string,
     address: Address,
     email?: string,
-    existingUid?: string
+    existingUid?: string,
+    coordinates?: { lat: number; lng: number }
   ): Promise<User> {
     await maybeDelay(300);
     const uid = existingUid || generateId("dev-user");
     const district = address?.district;
-    const coordinates =
-      district && DISTRICT_COORDS[district]
+    const finalCoordinates = coordinates ||
+      (district && DISTRICT_COORDS[district]
         ? DISTRICT_COORDS[district]
-        : { lat: -6.5818, lng: 110.6684 };
+        : { lat: -6.5818, lng: 110.6684 });
 
     const userData: User = {
       id: uid,
@@ -72,7 +74,7 @@ class MockAuthRepository implements AuthRepository {
       email: email || `test@mail.com`,
       avatar,
       address,
-      coordinates,
+      coordinates: finalCoordinates,
       onboardingCompleted: true,
     };
     if (DEV_MODE) {
@@ -120,18 +122,19 @@ class SupabaseAuthRepository implements AuthRepository {
     avatar: string,
     address: Address,
     email?: string,
-    uid?: string
+    uid?: string,
+    coordinates?: { lat: number; lng: number }
   ): Promise<User> {
     if (!supabase) throw new Error("Supabase not configured");
 
     const userId = uid || generateId("user");
 
-    // Determine coordinates based on district
+    // Determine coordinates based on district or use provided coordinates
     const district = address?.district;
-    const coordinates =
-      district && DISTRICT_COORDS[district]
+    const finalCoordinates = coordinates ||
+      (district && DISTRICT_COORDS[district]
         ? DISTRICT_COORDS[district]
-        : { lat: -6.5818, lng: 110.6684 }; // Default to Jepara logic
+        : { lat: -6.5818, lng: 110.6684 }); // Default to Jepara logic
 
     const updates = {
       uid: userId, // store in uid col to match firebase
@@ -139,7 +142,7 @@ class SupabaseAuthRepository implements AuthRepository {
       email,
       avatar,
       address,       // storing specific fields as json is fine or separate cols
-      coordinates,
+      coordinates: finalCoordinates,
       onboarding_completed: true,
       updated_at: new Date().toISOString(),
     };
@@ -165,7 +168,7 @@ class SupabaseAuthRepository implements AuthRepository {
       email,
       avatar,
       address,
-      coordinates,
+      coordinates: finalCoordinates,
       onboardingCompleted: true,
     };
 
