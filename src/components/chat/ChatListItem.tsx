@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { ChatThread } from "@/data/mockChats";
+import { ChatThread } from "@/types/chat";
 import { useRouter } from "next/navigation";
 import { formatChatListTime } from "@/utils/dateUtils";
 

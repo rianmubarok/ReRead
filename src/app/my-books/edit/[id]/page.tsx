@@ -61,7 +61,7 @@ export default function EditBookPage({ params }: { params: Promise<{ id: string 
                     condition: foundBook.condition,
                     description: foundBook.description,
                     exchangeMethods: foundBook.exchangeMethods || [],
-                    status: foundBook.status || "Available",
+                    status: (foundBook.status as "Available" | "Archived") || "Available",
                 });
                 setImagePreview(foundBook.image);
             } catch (err) {
